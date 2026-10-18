@@ -124,10 +124,10 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 
 ## ADR-016 — Supabase local sem Docker e sem projeto remoto
 
-- Status: aceita
+- Status: aceita; o destino desta máquina foi revisto pela ADR-018
 - Contexto: a máquina de desenvolvimento não tem Docker, e um `supabase link` reutilizaria outro projeto chamado PaDre. A fase pede persistência real e RLS.
 - Decisão: o CLI oficial fica como dependência (`supabase` 2.121.0) e o `config.toml` usa `project_id = "padre-identity-local"`. Sem Docker, `npm run supabase:start` sobe Postgres 17 embutido na porta 54322, GoTrue, PostgREST, Mailpit e um gateway em 127.0.0.1:54321. Segredos ficam em `supabase/.runtime`, ignorado pelo Git. A chave anônima vai para `.env.local`. A `service_role` não é escrita em variável `VITE_`.
-- Consequências: o ambiente é independente do Postgres da porta 5432 e de qualquer projeto remoto. Quando houver Docker, o mesmo `config.toml` serve ao CLI oficial; o runtime compatível continua sendo o caminho desta máquina.
+- Consequências: o ambiente é independente do Postgres da porta 5432 e de qualquer projeto remoto. O `config.toml` continua válido para o CLI. A ADR-018 registra que o runtime nativo do CLI já funciona nesta máquina e passa a ser o destino, sem trocar o supervisor nesta etapa.
 - Alternativas: exigir Docker pararia a fase. Uma máquina virtual só para o CLI seria mais pesada do que os binários já usados pelo CLI.
 
 ## ADR-017 — Perfil público separado das preferências
@@ -137,3 +137,11 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 - Decisão: `auth.users` é a conta. `profiles.id` é o mesmo UUID. `profiles` guarda `username`, `display_name`, `visibility`, `created_at` e `updated_at`. `profile_preferences` guarda `timezone`. Visibilidade inicial é só `private` ou `public`, padrão `private`. Username é normalizado com `trim` + minúsculas e precisa casar `^[a-z][a-z0-9_]{2,29}$`. `display_name` aceita acento, de 1 a 80 caracteres. Fuso é um nome IANA, padrão `America/Sao_Paulo`. O gatilho `private.handle_new_user` cria as duas linhas, ignora visibilidade e papel vindos do cliente e recusa username inválido. Outro gatilho força `role = authenticated`. Leitura de perfil público exige sessão. Preferências não entram nessa leitura.
 - Consequências: não há página para folhear perfis de outras pessoas; a política já permite a leitura autenticada do perfil público. `friends` fica para a fase de amizades. No ambiente local o GoTrue confirma o e-mail sozinho para o fluxo ser testável; produção ainda não está configurada.
 - Alternativas: uma tabela só misturaria fuso com dado público. Confiar no metadata para papel ou visibilidade inicial abriria elevação de privilégio.
+
+## ADR-018 — Runtime nativo oficial, sem trocar o ambiente agora
+
+- Status: aceita
+- Contexto: o supervisor manual em `scripts/local-supabase.mjs` existe porque não havia Docker. O CLI 2.121.0, com `[experimental] stack = true`, sobe o mesmo projeto como processos nativos no Linux amd64 com glibc 2.35 ou mais recente. Esta máquina tem glibc 2.39. O comando `supabase start` sem essa opção continua exigindo Docker e não aceita `--runtime`.
+- Decisão: o ambiente em uso continua sendo o supervisor manual, nas portas 54321, 54322, 54324 e 54325. A instância nativa foi criada à parte, em `/tmp`, com `--stack audit` e portas escolhidas pelo CLI. Ela aplicou `20261018170000_identity.sql` sem o prelúdio de papéis do script. Cadastro, login, sessão, perfil, RLS e recuperação de senha passaram com o JWT do Auth oficial. A troca do ambiente do repositório fica para um corte único: parar o supervisor, subir o stack nativo nas mesmas portas com `--eager` e restaurar um dump. O CLI não converte dados entre runtimes.
+- Consequências: diferenças que só existem no supervisor — `search_path` do `postgres`, `GOTRUE_JWT_DEFAULT_GROUP_NAME` e o encaminhamento de `/redefinir-senha` no gateway — não são necessárias no Auth oficial. O link oficial já nasce em `/auth/v1/verify` com `redirect_to` em `/redefinir-senha`. O stack experimental não tem garantia de compatibilidade entre versões, para serviços ociosos depois de 60 segundos sem `--eager`, e guarda dados em `~/.supabase`, fora do diretório do projeto. O cache dessa prova ocupou cerca de 1,5 GB.
+- Alternativas: migrar no meio da auditoria derrubaria o banco que os testes já usam. Permanecer no supervisor para sempre deixaria o projeto dependente de um gateway e de um GoTrue configurados à mão.

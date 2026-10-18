@@ -107,3 +107,9 @@ npm run test:e2e
 O teste Playwright faz esse caminho lendo a API do Mailpit. Se o link abrir em outro navegador, a troca do código falha; peça outro link no navegador em que vai concluir.
 
 Confirmação de e-mail de produção e o visual do template ainda não estão configurados. Aqui o cadastro já entra.
+
+## Runtime nativo do CLI
+
+O CLI 2.121.0 sobe um Supabase nativo com `[experimental] stack = true` e `supabase start --runtime native`. A prova foi feita numa cópia em `/tmp`, com outro nome de stack e outras portas. A migration de identidade aplicou, e o JWT oficial autorizou as políticas. Esse stack não substitui o supervisor: `npm run supabase:start` continua no ambiente atual.
+
+A troca recomendada é um corte só, com dump do banco de 54322, parada do supervisor e subida nativa nas mesmas portas usando `--eager`. Sem `--eager`, Auth e PostgREST encerram após 60 segundos ociosos. O CLI não importa sozinho o diretório `supabase/.runtime`. A ADR-018 guarda a decisão.
