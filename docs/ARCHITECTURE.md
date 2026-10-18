@@ -2,7 +2,7 @@
 
 PaDre é uma aplicação web de página única apoiada em Supabase. O cliente React organiza a interface e as regras puras. PostgreSQL, com Row Level Security, é a fronteira de autorização e a fonte dos dados confirmados.
 
-Nada disso está ligado a um projeto Supabase remoto. A identidade já tem migration versionada. O restante do esquema entra quando a fase correspondente for a base da etapa.
+Nada disso está ligado a um projeto Supabase remoto. Identidade e catálogo esportivo já têm migration versionada. O restante do esquema entra quando a fase correspondente for a base da etapa.
 
 ## Estilo
 
@@ -55,6 +55,10 @@ Encontro pode ter `community_id` nulo. Partida pertence a um encontro. Ranking e
 
 `profiles` é o que outra pessoa autenticada pode ver quando `visibility = public`: `username`, `display_name` e a própria visibilidade. `profile_preferences` guarda o fuso e só o dono lê. Anônimo não recebe `select`. Não há política de insert nem delete para o cliente: o perfil nasce no gatilho de `auth.users`. Detalhe e políticas em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
 
+### Autorização do catálogo
+
+`sports`, `sport_formats` e `scoring_rule_versions` têm RLS forçado. A política de leitura exige `active` na própria linha e nos pais. Não há política de insert, update ou delete, e esses comandos não são concedidos a `anon` nem a `authenticated`. A configuração da regra é validada por `private.scoring_config_is_valid` antes de gravar. O cliente confere de novo com Zod ao ler.
+
 ### Autorização prevista
 
 Toda tabela exposta ao cliente terá política. O desenho, ainda sem SQL:
@@ -66,6 +70,7 @@ Toda tabela exposta ao cliente terá política. O desenho, ainda sem SQL:
 | Comunidade e membros    | Membros; comunidade pública só no que for público   | Administradores; a pessoa sai da própria vaga     |
 | Local                   | Quem vê um encontro que o usa, ou quem criou        | Quem cria; edição por quem criou                  |
 | Encontro e presenças    | Conforme visibilidade e participação                | Organização; a pessoa responde pelo próprio RSVP  |
+| Catálogo esportivo      | Anônimo e autenticado, só linhas ativas             | Ninguém no cliente. Só migration                  |
 | Convite                 | Organização. Cliente anônimo não seleciona a tabela | Organização cria e revoga. Resgate por função     |
 | Partida e resultado     | Quem vê o encontro                                  | Organização, enquanto rascunho. Confirmação única |
 | Projeção de estatística | Conforme a privacidade de quem é medido             | Nenhum cliente. Só a função de projeção           |
@@ -105,7 +110,7 @@ TypeScript `strict`. ESLint e Prettier no código. Vitest e Testing Library nas 
 
 ## Riscos
 
-- Payload de placar flexível vira gaveta se a validação da regra atrasar. A fase de partidas entrega a validação junto com o registro.
+- Payload de placar flexível vira gaveta se a validação atrasar. A configuração da regra já é validada. A fase de partidas valida o placar jogado.
 - Política RLS frouxa vaza histórico. Cada tabela nova sai com teste de permissão, não só com a migration.
 - Qualquer escrita direta na projeção faz a estatística divergir. A política nega escrita do cliente.
 - `timestamp` sem fuso, ou data civil guardada como texto, quebra o dia do jogo.

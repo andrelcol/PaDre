@@ -12,17 +12,13 @@ Entregue: documentação, regras do Cursor, cliente React com TypeScript strict,
 
 Entregue: Supabase local, Auth, perfil com fuso e visibilidade, sessão e recuperação de senha. O procedimento está em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
 
-Fora: amigos, encontros, catálogo persistido.
+Fora: amigos, encontros, catálogo persistido. O catálogo entrou na fase 2.
 
 ## Fase 2 — Catálogo esportivo
 
-Objetivo: modalidades, formatos e regras versionadas das cinco modalidades iniciais.
+Entregue: modalidades, formatos e regras versionadas das cinco modalidades iniciais, com leitura pública das linhas ativas e escrita só por migration. A validação da configuração está no banco e no Zod. O resumo exibido na tela sai dessa configuração.
 
-Dependências: Fase 1 para saber quem administra o catálogo, ou leitura pública com escrita restrita à service role em seed.
-
-Fora: registrar partida.
-
-Pronto quando: as regras de vôlei, areia, futsal, beach tennis e futevôlei existem como dados distintos e uma função pura de desfecho está testada para cada tipo, sem ainda gravar partida.
+Fora: registrar partida e calcular o vencedor. `resolveOutcome` fica para a fase de partidas.
 
 ## Fase 3 — Amizades
 

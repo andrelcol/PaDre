@@ -1,10 +1,4 @@
-import { initialSports } from '@/domains/sports/initial-sports.ts'
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/ui/card.tsx'
+import { CatalogBrowser } from '@/domains/sports/components/catalog-browser.tsx'
 
 export function HomePage() {
   return (
@@ -22,27 +16,13 @@ export function HomePage() {
       <section className="flex flex-col gap-4" aria-labelledby="sports-heading">
         <div className="flex flex-col gap-1">
           <h2 id="sports-heading" className="text-xl font-semibold">
-            Modalidades iniciais
+            Modalidades
           </h2>
           <p className="text-sm text-muted-foreground">
-            Cada uma terá formato e regra de pontuação próprios.
+            Escolha um formato para ver a pontuação.
           </p>
         </div>
-        <ul
-          aria-label="Modalidades iniciais"
-          className="grid gap-3 sm:grid-cols-2"
-        >
-          {initialSports.map((sport) => (
-            <li key={sport.slug}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{sport.name}</CardTitle>
-                  <CardDescription>Catálogo inicial</CardDescription>
-                </CardHeader>
-              </Card>
-            </li>
-          ))}
-        </ul>
+        <CatalogBrowser />
       </section>
 
       <p className="text-sm text-muted-foreground">

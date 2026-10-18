@@ -28,9 +28,14 @@ export function SiteHeader() {
   return (
     <header className="border-b">
       <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-        <Link to="/" className="text-lg font-semibold">
-          PaDre
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link to="/" className="text-lg font-semibold">
+            PaDre
+          </Link>
+          <Link to="/modalidades" className="text-sm text-muted-foreground">
+            Modalidades
+          </Link>
+        </div>
         <nav aria-label="Conta" className="flex flex-wrap items-center gap-2">
           {loading ? (
             <span className="text-sm text-muted-foreground">Carregando</span>

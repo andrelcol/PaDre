@@ -100,7 +100,7 @@ src/
   app/                 rotas, providers e casca
   pages/               telas
   domains/identity/    conta, sessão e perfil
-  domains/sports/      lista das modalidades iniciais, ainda sem catálogo no banco
+  domains/sports/      catálogo: modalidade, formato e regra versionada
   shared/ui/           componentes shadcn/ui
   shared/lib/          cliente Supabase, tipos gerados e utilitário cn
 supabase/

@@ -5,6 +5,7 @@ import {
   GuestOnly,
   RequireAuth,
 } from '@/domains/identity/components/guards.tsx'
+import { CatalogPage } from '@/pages/CatalogPage.tsx'
 import { EditProfilePage } from '@/pages/EditProfilePage.tsx'
 import { HomePage } from '@/pages/HomePage.tsx'
 import { LoginPage } from '@/pages/LoginPage.tsx'
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { path: '/', element: <HomePage /> },
+      { path: '/modalidades', element: <CatalogPage /> },
       {
         path: '/entrar',
         element: (

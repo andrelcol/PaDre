@@ -64,6 +64,133 @@ export type Database = {
         }
         Relationships: []
       }
+      scoring_rule_versions: {
+        Row: {
+          active: boolean
+          config: NonNullable<Json>
+          created_at: string
+          format_id: string
+          id: string
+          origin: string
+          rule_type: string
+          version: number
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          config: NonNullable<Json>
+          created_at?: string
+          format_id: string
+          id: string
+          origin: string
+          rule_type: string
+          version: number
+        }
+        Update: {
+          active?: boolean
+          config?: NonNullable<Json>
+          created_at?: string
+          format_id?: string
+          id?: string
+          origin?: string
+          rule_type?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scoring_rule_versions_format_id_fkey'
+            columns: ['format_id']
+            isOneToOne: false
+            referencedRelation: 'sport_formats'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      sport_formats: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          players_per_side_max: number
+          players_per_side_min: number
+          side_count: number
+          slug: string
+          sport_id: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_order: number
+          id: string
+          name: string
+          players_per_side_max: number
+          players_per_side_min: number
+          side_count: number
+          slug: string
+          sport_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          players_per_side_max?: number
+          players_per_side_min?: number
+          side_count?: number
+          slug?: string
+          sport_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sport_formats_sport_id_fkey'
+            columns: ['sport_id']
+            isOneToOne: false
+            referencedRelation: 'sports'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      sports: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_order: number
+          id: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

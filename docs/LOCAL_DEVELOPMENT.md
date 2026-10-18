@@ -97,6 +97,10 @@ npm test
 npm run test:e2e
 ```
 
+## Catálogo
+
+Modalidades, formatos e regras ativas podem ser lidos com a chave anônima em `/rest/v1/sports`. Não há escrita pelo cliente. Uma modalidade nova entra numa migration posterior, com UUID fixo. A versão de uma regra não se altera: a migration desativa a versão corrente e insere a seguinte. O procedimento está na ADR-019 e no modelo de domínio.
+
 ## Recuperação de senha
 
 1. Em `/recuperar-senha`, informe o e-mail.

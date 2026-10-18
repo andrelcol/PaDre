@@ -1,6 +1,6 @@
 # Modelo de domínio
 
-Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. A migration de identidade está em `supabase/migrations`. O restante deste documento ainda não virou tabela.
+Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. Identidade e catálogo esportivo já têm migration em `supabase/migrations`. O restante deste documento ainda não virou tabela.
 
 ## Limites
 
@@ -28,17 +28,21 @@ Padrão anterior, perfil público e histórico visível para amigos, foi adiado.
 
 ## Catálogo esportivo
 
-`Sport` é a modalidade. Slug estável, nome, e a indicação de que novos registros podem entrar sem mudança de código.
+Implementado em `sports`, `sport_formats` e `scoring_rule_versions`. O cliente lê as linhas ativas. Inserir, alterar e apagar fica nas migrations: não há política de escrita para `anon` nem `authenticated`.
 
-`SportFormat` descreve como se joga aquela modalidade numa variante:
+`sports` é a modalidade. O slug é único, em minúsculas e com hífen (`volleyball`, `beach-volleyball`). `display_order` define a ordem da tela, para o alfabeto não virar a ordem do produto. Nome, descrição opcional e `active` completam o registro.
 
-- quantidade de lados (em geral dois)
-- mínimo e máximo de atletas por lado, para caber o jogo recreativo e o regulamento cheio
-- regra de pontuação padrão
+`sport_formats` é uma variante daquela modalidade. A quantidade de jogadores não fica na modalidade: cada formato tem `side_count` e o intervalo `players_per_side_min` / `players_per_side_max`. O intervalo existe para um formato recreativo poder aceitar de 4 a 6 atletas sem abrir outra tabela. Os formatos iniciais usam mínimo igual ao máximo. O slug é único dentro da modalidade.
 
-`ScoringRule` é uma versão imutável dessa regra. A partida guarda o identificador da versão. Mudar o regulamento cria outra versão; partidas antigas continuam na anterior.
+`scoring_rule_versions` é a versão imutável da pontuação de um formato. A unicidade é `(format_id, version)`. Só uma versão ativa por formato. Uma partida futura guarda `scoring_rule_versions.id`, não o slug nem o JSON vigente. Mudar o regulamento é inserir outra versão e desativar a anterior. Um gatilho recusa apagar a linha e recusa mudar formato, versão, tipo, configuração, origem ou data de criação. O campo `active` pode mudar.
 
-O tipo da regra não é um inteiro genérico chamado "pontos". Cada tipo tem payload e interpretação próprios. O conjunto de tipos é aberto.
+O tipo não é um inteiro genérico chamado "pontos". A configuração é JSONB com as chaves daquele tipo, conferidas no banco e de novo no Zod. Campo fora do tipo, ou combinação inválida, não entra. `origin` distingue `official_summary` (só o formato do placar, não o livro de regras) de `app_proposal` (proposta do PaDre para jogo recreativo).
+
+| Tipo         | Configuração                                                                    | Desfecho previsto, ainda sem motor |
+| ------------ | ------------------------------------------------------------------------------- | ---------------------------------- |
+| `set_based`  | sets para vencer, pontos do set, diferença mínima, set decisivo e teto opcional | lado que vence os sets exigidos    |
+| `goal_based` | empate permitido e, se não houver empate, prorrogação ou pênaltis               | maior placar, ou empate            |
+| `game_based` | games do set, sets para vencer, diferença, tiebreak e super tiebreak opcional   | lado que vence a estrutura         |
 
 | Tipo         | Uso inicial                                      | Payload conceptual                         | Desfecho                                |
 | ------------ | ------------------------------------------------ | ------------------------------------------ | --------------------------------------- |
@@ -54,7 +58,24 @@ Exemplos que o catálogo inicial precisa conseguir representar, como dados e nã
 - Futsal: dois tempos, gols, empate possível.
 - Beach tennis: mais de um formato convive (set longo, super tiebreak, simples ou duplas).
 
-`resolveOutcome(rule, payload)` é a única interpretação. Ela devolve um lado ou `draw`. A confirmação persiste esse desfecho calculado. Uma correção gera nova revisão e recalcula.
+Catálogo inicial, versão 1:
+
+- Vôlei 6x6: resumo do placar de quadra, 3 sets a 25, decisivo a 15, diferença 2.
+- Vôlei 4x4: proposta do PaDre com o mesmo placar, quatro jogadores por lado.
+- Vôlei de areia 2x2: resumo do placar de areia, 2 sets a 21, decisivo a 15, diferença 2.
+- Vôlei de areia 4x4: proposta do PaDre com esse placar, quatro jogadores por lado.
+- Futsal 5x5: gols, empate possível, sem desempate nesta versão.
+- Beach tennis individual: proposta de um set a 6 games, diferença 2, tiebreak a 7.
+- Beach tennis em duplas: proposta de 2 sets, com super tiebreak decisivo a 10.
+- Futevôlei 2x2: proposta própria, 2 sets a 18, decisivo a 15. Não reutiliza a linha da areia.
+
+Para incluir outra modalidade, outra variante ou outra versão, a mudança é uma migration nova. Não se edita a migration já aplicada.
+
+1. Nova modalidade: `insert` em `sports` com UUID fixo, slug único e `display_order` livre.
+2. Novo formato: `insert` em `sport_formats` apontando para a modalidade, com mínimo e máximo de jogadores daquele formato.
+3. Nova versão de regra: desligar `active` da versão atual daquele formato e inserir a próxima `version` com o mesmo `format_id` e um UUID novo. A linha antiga permanece. O gatilho impede reescrever `config`.
+
+`resolveOutcome(rule, payload)` continua sendo a interpretação do placar, e ainda não existe. Esta fase valida a configuração. A fase de partidas calcula o desfecho e o grava. Uma correção gera nova revisão do resultado e recalcula.
 
 ## Encontros e locais
 

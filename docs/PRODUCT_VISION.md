@@ -58,4 +58,4 @@ Vôlei, vôlei de areia, futsal, beach tennis e futevôlei. A lista é dado de c
 
 ## O que este repositório ainda não é
 
-A etapa atual entrega visão, modelo, decisões, regras de trabalho e uma aplicação React que abre e lista as modalidades iniciais. Não há contas, encontros, partidas, comunidades, chat nem estatísticas calculadas.
+A aplicação já tem contas, perfil e o catálogo das cinco modalidades, com formatos e regras versionadas. Não há encontros, partidas, comunidades, chat nem estatísticas calculadas.
