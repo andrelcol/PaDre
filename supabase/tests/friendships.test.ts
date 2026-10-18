@@ -260,6 +260,34 @@ describe('friendships', () => {
     await expectReopenThenWait(ana.userId, bia.username)
   })
 
+  it('exposes friendship changes only through invoker functions', async () => {
+    const definition = await admin((client) =>
+      client.query<{ prosecdef: boolean }>(
+        `select prosecdef
+         from pg_proc
+         join pg_namespace on pg_namespace.oid = pg_proc.pronamespace
+         where nspname = 'public' and proname = 'request_friendship'`,
+      ),
+    )
+    expect(definition.rows[0]?.prosecdef).toBe(false)
+
+    await expect(
+      asUser(
+        null,
+        (client) => client.query(`select public.request_friendship('ana')`),
+        'anon',
+      ),
+    ).rejects.toMatchObject({ code: '42501' })
+
+    await expect(
+      asUser(
+        null,
+        (client) => client.query(`select private.request_friendship('ana')`),
+        'anon',
+      ),
+    ).rejects.toMatchObject({ code: '42501' })
+  })
+
   it('applies the friendship migration on a clean database', async () => {
     await admin(async (client) => {
       await client.query(

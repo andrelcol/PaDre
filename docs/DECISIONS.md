@@ -161,3 +161,19 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 - Decisão: uma linha em `friendships`, única pelo par ordenado. O estado muda só pelas funções. Recusa, cancelamento e remoção esperam 24 horas antes de um novo pedido, e cada pessoa tem no máximo 30 pedidos de saída pendentes. Essas travas ficam no banco. A descoberta é o username exato: a função devolve esse username para quem participa da relação, mesmo com perfil privado, e nada além disso. `display_name`, e-mail e `profile_preferences` continuam fora. Não há visibilidade `friends` nesta fase. Bloqueio futuro é outra tabela, lida pelas mesmas funções, sem apagar a amizade nem a vaga em comunidade.
 - Consequências: reenviar no mesmo dia falha de propósito. Um perfil privado segue ilegível por `select` em `profiles`. O bloqueio ainda não esconde ninguém.
 - Alternativas: duas linhas espelhadas duplicam a relação sob concorrência. Abrir o perfil inteiro para amigos antecipa o compartilhamento de histórico. Tratar bloqueio como estado desta tabela misturaria “não quero esta amizade” com “não quero ser encontrado”.
+
+## ADR-021 — Função pública não roda como dono do banco
+
+- Status: aceita
+- Contexto: `request_friendship`, `respond_to_friendship` e `list_my_friendships` nasceram `security definer` no schema `public`, o único que o PostgREST expõe. O corpo já estava em `private`, com `search_path` vazio e `auth.uid()` conferido. `anon` não executava. O risco que restava era uma função privilegiada no schema da API, rodando como superusuário.
+- Decisão: as três funções públicas passaram a `security invoker` e só delegam ao corpo em `private`. `authenticated` recebe `EXECUTE` nesses corpos para a delegação funcionar. `anon` não recebe. `private` continua fora de `db-schemas`. `username_is_available` segue `security definer` porque o anônimo precisa de um booleano e não lê o perfil.
+- Consequências: um erro no wrapper público usa o privilégio de quem chama. O corpo privilegiado ainda confia no `auth.uid()` que o gateway grava a partir do JWT verificado.
+- Alternativas: deixar o definer no schema exposto concentrava o privilégio na função que o cliente chama. Conceder o schema `private` ao PostgREST publicaria os corpos.
+
+## ADR-022 — Encontro privado, com uma vaga por transação
+
+- Status: aceita
+- Contexto: o modelo conceitual previa rascunho, publicação, local geográfico, comunidade opcional e vários estados de presença. Esta fase precisa que dois amigos marquem um horário, sem mapa, sem link e sem partida.
+- Decisão: tabelas `meetups`, `meetup_participants` e `meetup_invitations`. O nome do domínio continua `meetups`, como na arquitetura; `events` seria um segundo nome para o mesmo conceito. A rota é `/encontros`. O encontro nasce `scheduled` e privado. `cancelled` preserva a linha. `completed` fica para o fechamento de presença e não dispara sozinho. A modalidade vem do formato. A `scoring_rule_version_id` fica gravada mesmo que outra versão seja ativada depois. Horário é `timestamptz`; `time_zone` só formata a tela. O local é texto até existir `places`. Quem organiza ocupa uma vaga. A capacidade vai de 2 a 64 e só conta `confirmed`. Toda alta de confirmados trava a linha do encontro com `for update`. Convite exige amizade `accepted`. Aceitar e ocupar a vaga são a mesma transação. Modalidade, regra e horário só mudam enquanto o único confirmado é quem organiza. Quem saiu não volta nesta versão.
+- Consequências: dois aceites simultâneos na última vaga deixam um de fora. Um perfil privado continua ilegível; a lista mostra username. Convite por link, geografia, comunidade e partida entram sem reescrever esta linha.
+- Alternativas: contar vagas no cliente perde a corrida. Apagar o encontro cancelado some com o histórico. Tratar o organizador como participante opcional deixa o encontro sem responsável.

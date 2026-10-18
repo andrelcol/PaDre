@@ -7,6 +7,9 @@ import {
 } from '@/domains/identity/components/guards.tsx'
 import { CatalogPage } from '@/pages/CatalogPage.tsx'
 import { FriendsPage } from '@/pages/FriendsPage.tsx'
+import { MeetupPage } from '@/pages/MeetupPage.tsx'
+import { MeetupsPage } from '@/pages/MeetupsPage.tsx'
+import { NewMeetupPage } from '@/pages/NewMeetupPage.tsx'
 import { EditProfilePage } from '@/pages/EditProfilePage.tsx'
 import { HomePage } from '@/pages/HomePage.tsx'
 import { LoginPage } from '@/pages/LoginPage.tsx'
@@ -21,6 +24,30 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/modalidades', element: <CatalogPage /> },
+      {
+        path: '/encontros',
+        element: (
+          <RequireAuth>
+            <MeetupsPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/encontros/novo',
+        element: (
+          <RequireAuth>
+            <NewMeetupPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/encontros/:id',
+        element: (
+          <RequireAuth>
+            <MeetupPage />
+          </RequireAuth>
+        ),
+      },
       {
         path: '/amigos',
         element: (

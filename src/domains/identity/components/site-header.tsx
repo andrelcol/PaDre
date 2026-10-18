@@ -41,6 +41,9 @@ export function SiteHeader() {
             <span className="text-sm text-muted-foreground">Carregando</span>
           ) : session ? (
             <>
+              <Link to="/encontros" className={buttonClassName('ghost')}>
+                Encontros
+              </Link>
               <Link to="/amigos" className={buttonClassName('ghost')}>
                 Amigos
               </Link>

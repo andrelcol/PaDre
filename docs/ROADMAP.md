@@ -28,17 +28,13 @@ Fora: bloqueio, visibilidade `friends`, comunidades e convite de encontro. O blo
 
 ## Fase 4 — Locais e encontros
 
-Objetivo: PostGIS, local, encontro sem comunidade obrigatória, e estados de presença.
+Entregue: encontro privado, horário em `timestamptz` com fuso IANA, local em texto, capacidade com trava transacional e convite entre amigos.
 
-Dependências: perfil e catálogo.
-
-Fora: link anônimo e partida.
-
-Pronto quando: a organização publica um encontro com horário em fuso IANA e outra pessoa confirma presença. Rascunho não aparece para terceiros.
+Fora ainda: PostGIS, mapa, visibilidade pública e estado `completed`. Partida e comunidade continuam nas fases seguintes.
 
 ## Fase 5 — Convites
 
-Objetivo: convite para quem já tem conta e link com token hasheado, expiração e limite de uso.
+O convite para quem já tem conta e é amigo entrou na fase 4. Falta o link com token hasheado, expiração e limite de uso.
 
 Dependências: encontros. Comunidades entram só quando a Fase 8 existir; o convite de comunidade espera essa fase.
 

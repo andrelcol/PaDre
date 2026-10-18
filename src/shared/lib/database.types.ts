@@ -64,6 +64,179 @@ export type Database = {
           },
         ]
       }
+      meetup_invitations: {
+        Row: {
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          meetup_id: string
+          responded_at: string | null
+          status: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          meetup_id: string
+          responded_at?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          meetup_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'meetup_invitations_invitee_id_fkey'
+            columns: ['invitee_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetup_invitations_inviter_id_fkey'
+            columns: ['inviter_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetup_invitations_meetup_id_fkey'
+            columns: ['meetup_id']
+            isOneToOne: false
+            referencedRelation: 'meetups'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      meetup_participants: {
+        Row: {
+          id: string
+          joined_at: string
+          meetup_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          id?: string
+          joined_at?: string
+          meetup_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          meetup_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'meetup_participants_meetup_id_fkey'
+            columns: ['meetup_id']
+            isOneToOne: false
+            referencedRelation: 'meetups'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetup_participants_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      meetups: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string
+          id: string
+          location_address: string | null
+          location_name: string
+          max_participants: number
+          organizer_id: string
+          scoring_rule_version_id: string
+          sport_format_id: string
+          starts_at: string
+          status: string
+          time_zone: string
+          title: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          id?: string
+          location_address?: string | null
+          location_name: string
+          max_participants: number
+          organizer_id: string
+          scoring_rule_version_id: string
+          sport_format_id: string
+          starts_at: string
+          status?: string
+          time_zone: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          id?: string
+          location_address?: string | null
+          location_name?: string
+          max_participants?: number
+          organizer_id?: string
+          scoring_rule_version_id?: string
+          sport_format_id?: string
+          starts_at?: string
+          status?: string
+          time_zone?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'meetups_organizer_id_fkey'
+            columns: ['organizer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetups_scoring_rule_version_id_fkey'
+            columns: ['scoring_rule_version_id']
+            isOneToOne: false
+            referencedRelation: 'scoring_rule_versions'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetups_sport_format_id_fkey'
+            columns: ['sport_format_id']
+            isOneToOne: false
+            referencedRelation: 'sport_formats'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile_preferences: {
         Row: {
           timezone: string
@@ -251,6 +424,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_meetup: { Args: { meetup_id: string }; Returns: string }
+      cancel_meetup_invitation: {
+        Args: { invitation_id: string }
+        Returns: string
+      }
+      create_meetup: {
+        Args: {
+          description: string
+          ends_at: string
+          location_address: string
+          location_name: string
+          max_participants: number
+          scoring_rule_version_id: string
+          sport_format_id: string
+          starts_at: string
+          time_zone: string
+          title: string
+        }
+        Returns: string
+      }
+      get_meetup: { Args: { meetup_id: string }; Returns: Json }
+      invite_to_meetup: {
+        Args: { meetup_id: string; username: string }
+        Returns: {
+          id: string
+          invitee_username: string
+          status: string
+        }[]
+      }
+      leave_meetup: { Args: { meetup_id: string }; Returns: string }
       list_my_friendships: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -261,6 +464,24 @@ export type Database = {
           side: string
           status: string
           updated_at: string
+        }[]
+      }
+      list_my_meetups: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          confirmed_count: number
+          ends_at: string
+          format_name: string
+          id: string
+          invitation_id: string
+          location_name: string
+          max_participants: number
+          relation: string
+          sport_name: string
+          starts_at: string
+          status: string
+          time_zone: string
+          title: string
         }[]
       }
       request_friendship: {
@@ -278,6 +499,26 @@ export type Database = {
           other_username: string
           status: string
         }[]
+      }
+      respond_to_meetup_invitation: {
+        Args: { action: string; invitation_id: string }
+        Returns: string
+      }
+      update_meetup: {
+        Args: {
+          description: string
+          ends_at: string
+          location_address: string
+          location_name: string
+          max_participants: number
+          meetup_id: string
+          scoring_rule_version_id: string
+          sport_format_id: string
+          starts_at: string
+          time_zone: string
+          title: string
+        }
+        Returns: string
       }
       username_is_available: { Args: { candidate: string }; Returns: boolean }
     }

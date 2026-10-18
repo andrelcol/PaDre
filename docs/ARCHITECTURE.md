@@ -2,7 +2,7 @@
 
 PaDre é uma aplicação web de página única apoiada em Supabase. O cliente React organiza a interface e as regras puras. PostgreSQL, com Row Level Security, é a fronteira de autorização e a fonte dos dados confirmados.
 
-Nada disso está ligado a um projeto Supabase remoto. Identidade e catálogo esportivo já têm migration versionada. O restante do esquema entra quando a fase correspondente for a base da etapa.
+Nada disso está ligado a um projeto Supabase remoto. Identidade, catálogo, amizades e encontros já têm migration versionada. O restante do esquema entra quando a fase correspondente for a base da etapa.
 
 ## Estilo
 
@@ -61,6 +61,16 @@ Encontro pode ter `community_id` nulo. Partida pertence a um encontro. Ranking e
 
 A política de `profiles` não consulta `friendships`, e a de `friendships` não consulta `profiles`. A leitura do username passa pela função, não por uma política cruzada.
 
+As três funções públicas de amizade são `security invoker`. O corpo que lê perfil privado continua em `private`, que o PostgREST não expõe (`db-schemas = "public"`). `authenticated` executa esses corpos; `anon` não. A mesma divisão vale para os encontros.
+
+### Autorização de encontro
+
+`meetups`, `meetup_participants` e `meetup_invitations` têm RLS forçado. Lê o encontro quem organiza, quem está confirmado ou quem tem convite pendente. A lista de convites fica com o organizador e com o próprio convidado. Não há `insert`, `update` nem `delete` para o cliente. Um gatilho recusa escrita fora das funções, inclusive troca de `organizer_id` e de timestamps.
+
+A vaga sobe só dentro da função, com `select for update` na linha do encontro. Aceitar, criar e qualquer aumento usam essa trava. A política de leitura chama `private.can_read_meetup`, `security definer`, para não fazer a política de uma tabela ler a outra sob RLS.
+
+O username dos participantes sai de `get_meetup` e `list_my_meetups`. `profiles` e `profile_preferences` não se abrem por causa do encontro.
+
 ### Autorização do catálogo
 
 `sports`, `sport_formats` e `scoring_rule_versions` têm RLS forçado. A política de leitura exige `active` na própria linha e nos pais. Não há política de insert, update ou delete, e esses comandos não são concedidos a `anon` nem a `authenticated`. A configuração da regra é validada por `private.scoring_config_is_valid` antes de gravar. O cliente confere de novo com Zod ao ler.
@@ -75,7 +85,7 @@ Toda tabela exposta ao cliente terá política. O desenho, ainda sem SQL:
 | Amizade                 | Só os dois envolvidos                               | Funções: pedir, aceitar, recusar, cancelar, remover |
 | Comunidade e membros    | Membros; comunidade pública só no que for público   | Administradores; a pessoa sai da própria vaga       |
 | Local                   | Quem vê um encontro que o usa, ou quem criou        | Quem cria; edição por quem criou                    |
-| Encontro e presenças    | Conforme visibilidade e participação                | Organização; a pessoa responde pelo próprio RSVP    |
+| Encontro e presenças    | Organizador, confirmado ou convite pendente        | Funções: criar, editar, convidar, aceitar, sair, cancelar |
 | Catálogo esportivo      | Anônimo e autenticado, só linhas ativas             | Ninguém no cliente. Só migration                    |
 | Convite                 | Organização. Cliente anônimo não seleciona a tabela | Organização cria e revoga. Resgate por função       |
 | Partida e resultado     | Quem vê o encontro                                  | Organização, enquanto rascunho. Confirmação única   |

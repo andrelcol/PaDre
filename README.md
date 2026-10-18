@@ -101,6 +101,7 @@ src/
   pages/               telas
   domains/identity/    conta, sessão e perfil
   domains/friendships/ pedido, aceite e lista de amigos
+  domains/meetups/     encontro, presença e convite entre amigos
   domains/sports/      catálogo: modalidade, formato e regra versionada
   shared/ui/           componentes shadcn/ui
   shared/lib/          cliente Supabase, tipos gerados e utilitário cn
@@ -116,5 +117,5 @@ Regra de negócio fica em `src/domains/<domínio>/model`. Acesso ao Supabase fic
 
 ## O que esta etapa não inclui
 
-- Encontros, partidas, comunidades, chat, mapa ou estatísticas
+- Convite por link, partidas, comunidades, chat, mapa ou estatísticas
 - Projeto Supabase remoto

@@ -1,6 +1,6 @@
 # Modelo de domínio
 
-Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. Identidade, catálogo esportivo e amizades já têm migration em `supabase/migrations`. O restante deste documento ainda não virou tabela.
+Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. Identidade, catálogo esportivo, amizades e encontros já têm migration em `supabase/migrations`. O restante deste documento ainda não virou tabela.
 
 ## Limites
 
@@ -99,24 +99,17 @@ Para incluir outra modalidade, outra variante ou outra versão, a mudança é um
 
 ## Encontros e locais
 
-`Place`: nome, endereço formatado e ponto `geography(Point, 4326)`. A coordenada serve ao mapa e, no futuro, ao transporte. Estatística por local usa o identificador do lugar, não o texto livre.
+Implementado em `meetups`, `meetup_participants` e `meetup_invitations`. O domínio da arquitetura continua `meetups`; a rota de produto é `/encontros`. A decisão está na [ADR-022](./DECISIONS.md).
 
-`Meetup`:
+`Meetup` guarda o organizador, o formato do catálogo e a `scoring_rule_versions.id` escolhida na criação. A modalidade sai do formato. O instante fica em `starts_at` e `ends_at` (`timestamptz`). `time_zone` é um nome IANA e só serve para mostrar o horário. O local desta fase é texto: `location_name` e `location_address`. Não há ponto geográfico ainda.
 
-- organizador
-- modalidade
-- `community_id` opcional
-- `place_id`
-- `starts_at` em `timestamptz` e `time_zone` IANA
-- visibilidade: `public`, `friends` ou `invite_only`
-- ciclo: `draft`, `published`, `cancelled`, `completed`
+Estados do encontro: `scheduled` e `cancelled`. `completed` entra numa migration futura, quando houver fechamento de presença, e não será preenchido por um relógio automático.
 
-`MeetupParticipation` é a vaga de uma pessoa naquele encontro.
+A capacidade inclui quem organiza, vai de 2 a 64 e conta só participantes `confirmed`. Quem está `left` ou `removed` não ocupa vaga. Quem saiu não volta nesta versão. A reentrada futura reabre a mesma linha, de novo com a trava da linha do encontro.
 
-- papel: `organizer` ou `player`
-- estado: `invited`, `pending`, `confirmed`, `declined`, `waitlisted`, `cancelled`, `attended`, `absent`
+`MeetupInvitation` é um convite para uma conta já cadastrada e amiga. Estados: `pending`, `accepted`, `declined`, `cancelled`. Pendente não ocupa vaga. Aceitar cria a participação na mesma transação. Há no máximo uma linha por pessoa e encontro.
 
-`pending` é pedido para entrar. `invited` é convite ainda sem resposta. `cancelled` é desistência depois de confirmar. `attended` e `absent` são fechamento feito pela organização, não um placar.
+`Place` com `geography(Point, 4326)`, `community_id`, visibilidade pública e convite por link continuam conceito. O convite por link, quando existir, não reutiliza o token cru como chave de leitura.
 
 ## Convites
 

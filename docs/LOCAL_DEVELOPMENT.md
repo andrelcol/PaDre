@@ -101,6 +101,10 @@ npm run test:e2e
 
 A página `/amigos` pede amizade pelo username exato. Aceitar, recusar, cancelar e remover passam por funções no banco. Um perfil privado continua sem leitura geral; a lista de relações mostra só o username da outra pessoa. Um novo pedido entre o mesmo par espera 24 horas depois de recusa, cancelamento ou remoção. O detalhe está na ADR-020.
 
+## Encontros
+
+A página `/encontros` lista os próximos, os que a pessoa organiza, os convites pendentes e os anteriores ou cancelados. Criar um encontro escolhe modalidade e formato no catálogo vivo, grava o horário em UTC no fuso informado e guarda a versão da regra daquele formato. Convidar exige amizade confirmada. Aceitar, recusar, sair e cancelar passam por funções no banco. O detalhe está na ADR-022.
+
 ## Catálogo
 
 Modalidades, formatos e regras ativas podem ser lidos com a chave anônima em `/rest/v1/sports`. Não há escrita pelo cliente. Uma modalidade nova entra numa migration posterior, com UUID fixo. A versão de uma regra não se altera: a migration desativa a versão corrente e insere a seguinte. O procedimento está na ADR-019 e no modelo de domínio.
