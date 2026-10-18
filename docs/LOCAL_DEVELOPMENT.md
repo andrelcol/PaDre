@@ -103,7 +103,7 @@ A página `/amigos` pede amizade pelo username exato. Aceitar, recusar, cancelar
 
 ## Encontros
 
-A página `/encontros` lista os próximos, os que a pessoa organiza, os convites pendentes e os anteriores ou cancelados. Criar um encontro escolhe modalidade e formato no catálogo vivo, grava o horário em UTC no fuso informado e guarda a versão da regra daquele formato. Convidar exige amizade confirmada. Aceitar, recusar, sair e cancelar passam por funções no banco. O detalhe está na ADR-022.
+A página `/encontros` lista os próximos, os que a pessoa organiza, os convites pendentes e os anteriores ou cancelados. Criar um encontro escolhe modalidade e formato no catálogo vivo, grava o horário em UTC no fuso informado e guarda a versão da regra daquele formato. Convidar um amigo exige amizade confirmada. O link em `/convite/:token` mostra um preview sem o endereço e, depois do login ou do cadastro, pede uma confirmação para ocupar a vaga. O retorno do cadastro fica na query `retorno` e só aceita esse caminho. Aceitar, recusar, sair, cancelar, gerar e revogar passam por funções no banco. O detalhe está nas ADR-022 e ADR-023.
 
 ## Catálogo
 

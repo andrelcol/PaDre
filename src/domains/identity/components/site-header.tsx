@@ -1,13 +1,22 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { signOut } from '@/domains/identity/api/auth.ts'
 import { useSession } from '@/domains/identity/components/session.tsx'
+import {
+  inviteAuthPath,
+  inviteReturnPath,
+} from '@/domains/meetups/model/invite-link.ts'
 import { Button, buttonClassName } from '@/shared/ui/button.tsx'
 
 export function SiteHeader() {
   const { session, loading } = useSession()
+  const location = useLocation()
+  const [params] = useSearchParams()
+  const retorno =
+    inviteReturnPath(location.pathname) ??
+    inviteReturnPath(params.get('retorno'))
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [error, setError] = useState('')
@@ -56,10 +65,16 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Link to="/entrar" className={buttonClassName('ghost')}>
+              <Link
+                to={inviteAuthPath('/entrar', retorno)}
+                className={buttonClassName('ghost')}
+              >
                 Entrar
               </Link>
-              <Link to="/cadastrar" className={buttonClassName('primary')}>
+              <Link
+                to={inviteAuthPath('/cadastrar', retorno)}
+                className={buttonClassName('primary')}
+              >
                 Criar conta
               </Link>
             </>

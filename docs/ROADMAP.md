@@ -34,13 +34,11 @@ Fora ainda: PostGIS, mapa, visibilidade pública e estado `completed`. Partida e
 
 ## Fase 5 — Convites
 
-O convite para quem já tem conta e é amigo entrou na fase 4. Falta o link com token hasheado, expiração e limite de uso.
+Entregue para encontros: link com token de 256 bits, só o hash no banco, expiração de no máximo sete dias, revogação e entrada de quem não é amigo. O cadastro volta ao convite e a vaga depende de uma confirmação explícita.
 
-Dependências: encontros. Comunidades entram só quando a Fase 8 existir; o convite de comunidade espera essa fase.
+Falta o convite de comunidade. Ele espera a Fase 8. Não há limite de usos separado da capacidade do encontro.
 
 Fora: estatísticas.
-
-Pronto quando: o token cru não está no banco, o link expirado falha, e o resgate de quem acabou de cadastrar cria a participação.
 
 ## Fase 6 — Partidas
 

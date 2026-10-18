@@ -4,11 +4,16 @@ import { useParams } from 'react-router'
 import { useSession } from '@/domains/identity/components/session.tsx'
 import { useFriendships } from '@/domains/friendships/api/queries.ts'
 import {
+  useCreateMeetupInviteLink,
   useMeetup,
   useMeetupCommand,
+  useMeetupInviteLink,
+  useRevokeMeetupInviteLink,
   useUpdateMeetup,
 } from '@/domains/meetups/api/queries.ts'
 import { MeetupDetailView } from '@/domains/meetups/components/meetup-detail.tsx'
+import { MeetupInviteLinkPanel } from '@/domains/meetups/components/meetup-invite-link.tsx'
+import { inviteShareUrl } from '@/domains/meetups/model/invite-link.ts'
 import { MeetupForm } from '@/domains/meetups/components/meetup-form.tsx'
 import {
   canChangeStructure,
@@ -30,6 +35,15 @@ export function MeetupPage() {
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [shareExpiry, setShareExpiry] = useState<string | null>(null)
+  const [linkNotice, setLinkNotice] = useState('')
+  const [linkError, setLinkError] = useState('')
+  const organizer =
+    Boolean(meetup.data?.isOrganizer) && meetup.data?.status === 'scheduled'
+  const inviteLink = useMeetupInviteLink(id, organizer && !editing)
+  const createLink = useCreateMeetupInviteLink(id ?? '')
+  const revokeLink = useRevokeMeetupInviteLink(id ?? '')
 
   const detail = meetup.data
   const pending = update.isPending || command.isPending
@@ -185,6 +199,57 @@ export function MeetupPage() {
             })
           }
           onEdit={() => setEditing(true)}
+        />
+      ) : null}
+      {detail && !editing && organizer ? (
+        <MeetupInviteLinkPanel
+          link={inviteLink.data}
+          loading={inviteLink.isPending}
+          shareUrl={shareUrl}
+          expiresAt={shareExpiry}
+          timeZone={detail.timeZone}
+          pending={createLink.isPending || revokeLink.isPending}
+          notice={linkNotice}
+          error={linkError}
+          onCreate={() => {
+            setLinkNotice('')
+            setLinkError('')
+            createLink.mutate(undefined, {
+              onSuccess: (issued) => {
+                const url = inviteShareUrl(window.location.origin, issued.token)
+                setShareUrl(url)
+                setShareExpiry(issued.expires_at)
+                setLinkNotice(
+                  'Link gerado. Copie agora; ele não poderá ser recuperado depois.',
+                )
+              },
+              onError: (caught) => setLinkError(messageFromMeetupError(caught)),
+            })
+          }}
+          onRevoke={() => {
+            setLinkNotice('')
+            setLinkError('')
+            revokeLink.mutate(undefined, {
+              onSuccess: () => {
+                setShareUrl(null)
+                setShareExpiry(null)
+                setLinkNotice(
+                  'Link revogado. Quem já entrou continua no encontro.',
+                )
+              },
+              onError: (caught) => setLinkError(messageFromMeetupError(caught)),
+            })
+          }}
+          onCopy={() => {
+            if (!shareUrl) return
+            void navigator.clipboard.writeText(shareUrl).then(
+              () => setLinkNotice('Link copiado.'),
+              () =>
+                setLinkError(
+                  'Não foi possível copiar. Selecione o link e copie manualmente.',
+                ),
+            )
+          }}
         />
       ) : null}
     </main>

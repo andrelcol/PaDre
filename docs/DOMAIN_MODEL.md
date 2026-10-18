@@ -109,18 +109,15 @@ A capacidade inclui quem organiza, vai de 2 a 64 e conta só participantes `conf
 
 `MeetupInvitation` é um convite para uma conta já cadastrada e amiga. Estados: `pending`, `accepted`, `declined`, `cancelled`. Pendente não ocupa vaga. Aceitar cria a participação na mesma transação. Há no máximo uma linha por pessoa e encontro.
 
-`Place` com `geography(Point, 4326)`, `community_id`, visibilidade pública e convite por link continuam conceito. O convite por link, quando existir, não reutiliza o token cru como chave de leitura.
+`Place` com `geography(Point, 4326)`, `community_id` e visibilidade pública continuam conceito.
 
 ## Convites
 
-`Invite` aponta para um encontro ou para uma comunidade, nunca para os dois ao mesmo tempo.
+O convite para uma conta amiga continua em `meetup_invitations`. O link compartilhável é `meetup_invite_links`: um encontro, quem gerou, `token_hash`, `expires_at`, `revoked_at` e `created_at`. Não há coluna de token cru, nem `max_uses`. A capacidade do encontro é o limite de uso. A linha revogada permanece.
 
-- alvo `user` (pessoa já cadastrada) ou `link` (pode ser aberto por quem ainda não tem conta)
-- `token_hash`, `expires_at`, `max_uses`, `use_count`
-- estado: `active`, `revoked`, `exhausted`, `expired`
-- e-mail opcional, só para pré-vincular um link, sem servir de segredo
+Um convite interno `pending`, `declined` ou `cancelled` passa a `accepted` quando a mesma pessoa entra pelo link, na mesma transação da vaga. Quem já está `confirmed` recebe a mesma resposta de novo, sem segunda vaga. Quem está `left` ou `removed` não volta.
 
-O token cru aparece uma vez, no link. O resgate cria ou atualiza a participação e só então incrementa o uso.
+Convite de comunidade, e-mail pré-vinculado e limite de usos separado da capacidade continuam fora. O resgate continua sendo função, nunca um `select` pelo token.
 
 ## Comunidades
 

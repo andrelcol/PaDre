@@ -4,11 +4,16 @@ import {
   cancelMeetup,
   cancelMeetupInvitation,
   createMeetup,
+  createMeetupInviteLink,
   getMeetup,
+  getMeetupInviteLink,
   inviteToMeetup,
+  joinMeetupByInvite,
   leaveMeetup,
   listMeetups,
+  previewMeetupInvite,
   respondToMeetupInvitation,
+  revokeMeetupInviteLink,
   updateMeetup,
   type MeetupWrite,
 } from '@/domains/meetups/api/meetups.ts'
@@ -76,6 +81,63 @@ export function useMeetupCommand(meetupId: string | undefined) {
       return respondToMeetupInvitation(command.invitationId, command.action)
     },
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['meetups'] })
+    },
+  })
+}
+
+export function useMeetupInviteLink(
+  meetupId: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ['meetups', meetupId, 'invite-link'],
+    queryFn: () => getMeetupInviteLink(meetupId ?? ''),
+    enabled: Boolean(meetupId) && enabled,
+  })
+}
+
+export function useCreateMeetupInviteLink(meetupId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => createMeetupInviteLink(meetupId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['meetups', meetupId, 'invite-link'],
+      })
+    },
+  })
+}
+
+export function useRevokeMeetupInviteLink(meetupId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => revokeMeetupInviteLink(meetupId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['meetups', meetupId, 'invite-link'],
+      })
+    },
+  })
+}
+
+export function useInvitePreview(token: string | undefined) {
+  return useQuery({
+    queryKey: ['invite-preview', token],
+    queryFn: () => previewMeetupInvite(token ?? ''),
+    enabled: Boolean(token),
+    retry: false,
+  })
+}
+
+export function useJoinMeetupByInvite(token: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => joinMeetupByInvite(token),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['invite-preview', token],
+      })
       await queryClient.invalidateQueries({ queryKey: ['meetups'] })
     },
   })

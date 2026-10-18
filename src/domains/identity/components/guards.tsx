@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { Navigate } from 'react-router'
+import { Navigate, useSearchParams } from 'react-router'
 
 import { useSession } from '@/domains/identity/components/session.tsx'
+import { inviteReturnPath } from '@/domains/meetups/model/invite-link.ts'
 
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useSession()
@@ -26,6 +27,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
 export function GuestOnly({ children }: { children: ReactNode }) {
   const { session, loading } = useSession()
+  const [params] = useSearchParams()
 
   if (loading) {
     return (
@@ -39,7 +41,12 @@ export function GuestOnly({ children }: { children: ReactNode }) {
   }
 
   if (session) {
-    return <Navigate to="/perfil" replace />
+    return (
+      <Navigate
+        to={inviteReturnPath(params.get('retorno')) ?? '/perfil'}
+        replace
+      />
+    )
   }
 
   return children

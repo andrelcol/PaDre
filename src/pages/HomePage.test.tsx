@@ -71,7 +71,7 @@ describe('HomePage', () => {
     ).toBeVisible()
     expect(screen.getByRole('button', { name: /Futevôlei/ })).toBeVisible()
     expect(
-      screen.getByText('Encontros e partidas entram nas próximas etapas.'),
+      screen.getByText('Partidas entram nas próximas etapas.'),
     ).toBeVisible()
   })
 

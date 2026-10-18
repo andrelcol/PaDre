@@ -562,6 +562,7 @@ describe('meetups', () => {
         '20261018200000_friendships.sql',
         '20261018210000_friendship_invoker.sql',
         '20261018220000_meetups.sql',
+        '20261018230000_meetup_invite_links.sql',
       ]) {
         await clean.query(
           readFileSync(
@@ -571,9 +572,13 @@ describe('meetups', () => {
         )
       }
       const table = await clean.query(
-        `select to_regclass('public.meetups') as name`,
+        `select to_regclass('public.meetups') as meetups,
+                to_regclass('public.meetup_invite_links') as links`,
       )
-      expect(table.rows[0]?.name).toBe('meetups')
+      expect(table.rows[0]).toMatchObject({
+        meetups: 'meetups',
+        links: 'meetup_invite_links',
+      })
     } finally {
       await clean.end()
       await admin(async (client) => {

@@ -71,6 +71,8 @@ A vaga sobe só dentro da função, com `select for update` na linha do encontro
 
 O username dos participantes sai de `get_meetup` e `list_my_meetups`. `profiles` e `profile_preferences` não se abrem por causa do encontro.
 
+`meetup_invite_links` não tem `select` para o cliente. O preview público é `preview_meetup_invite`, `security invoker`, e o corpo em `private` devolve título, modalidade, formato, horário, nome do local e vagas. Endereço, e-mail, organizador e a lista de pessoas ficam de fora. `anon` executa só esse corpo, para o wrapper funcionar, e não executa as outras funções de `private`. Entrar pelo link usa a mesma trava `for update` do encontro. A decisão está na [ADR-023](./DECISIONS.md).
+
 ### Autorização do catálogo
 
 `sports`, `sport_formats` e `scoring_rule_versions` têm RLS forçado. A política de leitura exige `active` na própria linha e nos pais. Não há política de insert, update ou delete, e esses comandos não são concedidos a `anon` nem a `authenticated`. A configuração da regra é validada por `private.scoring_config_is_valid` antes de gravar. O cliente confere de novo com Zod ao ler.
@@ -85,9 +87,9 @@ Toda tabela exposta ao cliente terá política. O desenho, ainda sem SQL:
 | Amizade                 | Só os dois envolvidos                               | Funções: pedir, aceitar, recusar, cancelar, remover |
 | Comunidade e membros    | Membros; comunidade pública só no que for público   | Administradores; a pessoa sai da própria vaga       |
 | Local                   | Quem vê um encontro que o usa, ou quem criou        | Quem cria; edição por quem criou                    |
-| Encontro e presenças    | Organizador, confirmado ou convite pendente        | Funções: criar, editar, convidar, aceitar, sair, cancelar |
+| Encontro e presenças    | Organizador, confirmado ou convite pendente        | Funções: criar, editar, convidar, aceitar, sair, cancelar, entrar por link |
 | Catálogo esportivo      | Anônimo e autenticado, só linhas ativas             | Ninguém no cliente. Só migration                    |
-| Convite                 | Organização. Cliente anônimo não seleciona a tabela | Organização cria e revoga. Resgate por função       |
+| Convite por link        | Preview estreito, sem a tabela                      | Organização gera e revoga. Entrada por função       |
 | Partida e resultado     | Quem vê o encontro                                  | Organização, enquanto rascunho. Confirmação única   |
 | Projeção de estatística | Conforme a privacidade de quem é medido             | Nenhum cliente. Só a função de projeção             |
 
@@ -114,7 +116,7 @@ Instantes em `timestamptz`. Perfil e encontro guardam um nome de fuso IANA. A te
 
 ## Convites
 
-Token aleatório com pelo menos 128 bits. O banco guarda o hash. O link leva o token cru uma vez. Expiração é obrigatória. Convite direto é de uso único; link pode ter limite de usos. Resgate de quem não tem conta acontece depois do cadastro, se o token ainda vale. O aceite é uma função no servidor, não um `select` pelo token.
+O link de encontro carrega 32 bytes aleatórios, em base64url. O banco guarda o SHA-256. O token cru volta só na geração e a tela não consegue mostrá-lo de novo depois de recarregar. A validade é o menor prazo entre sete dias e o início do encontro. Há um link não revogado por encontro; gerar outro revoga o anterior. Quem já confirmou permanece. O resgate não cria amizade e não reabre quem saiu. O cadastro volta para `/convite/:token` e a vaga só entra num clique explícito.
 
 ## Mapas e transporte
 

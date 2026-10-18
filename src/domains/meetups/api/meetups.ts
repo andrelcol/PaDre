@@ -1,4 +1,9 @@
 import {
+  parseIssuedInviteLink,
+  parseInviteLinkStatus,
+  parseInvitePreview,
+} from '@/domains/meetups/model/invite-link.ts'
+import {
   parseMeetupDetail,
   parseMeetupSummaries,
   type MeetupDraft,
@@ -96,6 +101,54 @@ export async function cancelMeetupInvitation(invitationId: string) {
     invitation_id: invitationId,
   })
   if (error) throw error
+  return data
+}
+
+export async function getMeetupInviteLink(meetupId: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('meetup_invite_link', {
+    meetup_id: meetupId,
+  })
+  if (error) throw error
+  return parseInviteLinkStatus(data)
+}
+
+export async function createMeetupInviteLink(meetupId: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('create_meetup_invite_link', {
+    meetup_id: meetupId,
+  })
+  if (error) throw error
+  return parseIssuedInviteLink(data)
+}
+
+export async function revokeMeetupInviteLink(meetupId: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('revoke_meetup_invite_link', {
+    meetup_id: meetupId,
+  })
+  if (error) throw error
+  return data
+}
+
+export async function previewMeetupInvite(token: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('preview_meetup_invite', {
+    token,
+  })
+  if (error) throw error
+  return parseInvitePreview(data)
+}
+
+export async function joinMeetupByInvite(token: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('join_meetup_by_invite', {
+    token,
+  })
+  if (error) throw error
+  if (typeof data !== 'string') {
+    throw new Error('Não foi possível concluir. Tente de novo.')
+  }
   return data
 }
 

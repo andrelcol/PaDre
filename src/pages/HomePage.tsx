@@ -26,7 +26,7 @@ export function HomePage() {
       </section>
 
       <p className="text-sm text-muted-foreground">
-        Encontros e partidas entram nas próximas etapas.
+        Partidas entram nas próximas etapas.
       </p>
     </main>
   )

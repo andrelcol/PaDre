@@ -339,6 +339,9 @@ export function meetupErrorMessage(error: { message?: string; code?: string }) {
   if (message.includes('cannot be reopened')) {
     return 'Quem saiu não volta a participar nesta versão.'
   }
+  if (message.includes('invite unavailable')) {
+    return 'Este convite não está mais disponível.'
+  }
   if (message.includes('meetup is full')) {
     return 'Não há vagas disponíveis.'
   }

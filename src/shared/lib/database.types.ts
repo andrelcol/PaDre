@@ -117,6 +117,52 @@ export type Database = {
           },
         ]
       }
+      meetup_invite_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          meetup_id: string
+          revoked_at: string | null
+          token_hash: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          meetup_id: string
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          meetup_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'meetup_invite_links_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetup_invite_links_meetup_id_fkey'
+            columns: ['meetup_id']
+            isOneToOne: false
+            referencedRelation: 'meetups'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       meetup_participants: {
         Row: {
           id: string
@@ -444,6 +490,13 @@ export type Database = {
         }
         Returns: string
       }
+      create_meetup_invite_link: {
+        Args: { meetup_id: string }
+        Returns: {
+          expires_at: string
+          token: string
+        }[]
+      }
       get_meetup: { Args: { meetup_id: string }; Returns: Json }
       invite_to_meetup: {
         Args: { meetup_id: string; username: string }
@@ -453,6 +506,7 @@ export type Database = {
           status: string
         }[]
       }
+      join_meetup_by_invite: { Args: { token: string }; Returns: string }
       leave_meetup: { Args: { meetup_id: string }; Returns: string }
       list_my_friendships: {
         Args: Record<PropertyKey, never>
@@ -484,6 +538,8 @@ export type Database = {
           title: string
         }[]
       }
+      meetup_invite_link: { Args: { meetup_id: string }; Returns: Json }
+      preview_meetup_invite: { Args: { token: string }; Returns: Json }
       request_friendship: {
         Args: { username: string }
         Returns: {
@@ -502,6 +558,10 @@ export type Database = {
       }
       respond_to_meetup_invitation: {
         Args: { action: string; invitation_id: string }
+        Returns: string
+      }
+      revoke_meetup_invite_link: {
+        Args: { meetup_id: string }
         Returns: string
       }
       update_meetup: {

@@ -7,7 +7,7 @@ import type {
 import { toAuthError } from '@/domains/identity/api/errors.ts'
 import { requireSupabase } from '@/shared/lib/supabase.ts'
 
-export async function signUp(input: SignupInput) {
+export async function signUp(input: SignupInput, emailRedirectTo?: string) {
   const supabase = requireSupabase()
   const available = await supabase.rpc('username_is_available', {
     candidate: input.username,
@@ -25,6 +25,7 @@ export async function signUp(input: SignupInput) {
     email: input.email,
     password: input.password,
     options: {
+      emailRedirectTo,
       data: {
         username: input.username,
         display_name: input.displayName,

@@ -16,6 +16,7 @@ const {
   respondToMeetupInvitation,
   leaveMeetup,
   cancelMeetup,
+  getMeetupInviteLink,
 } = vi.hoisted(() => ({
   getMeetup: vi.fn(),
   listFriendships: vi.fn(),
@@ -23,6 +24,7 @@ const {
   respondToMeetupInvitation: vi.fn(),
   leaveMeetup: vi.fn(),
   cancelMeetup: vi.fn(),
+  getMeetupInviteLink: vi.fn(),
 }))
 
 vi.mock('@/domains/meetups/api/meetups.ts', () => ({
@@ -35,6 +37,11 @@ vi.mock('@/domains/meetups/api/meetups.ts', () => ({
   respondToMeetupInvitation,
   cancelMeetupInvitation: vi.fn(),
   leaveMeetup,
+  getMeetupInviteLink,
+  createMeetupInviteLink: vi.fn(),
+  revokeMeetupInviteLink: vi.fn(),
+  previewMeetupInvite: vi.fn(),
+  joinMeetupByInvite: vi.fn(),
 }))
 
 vi.mock('@/domains/friendships/api/friendships.ts', () => ({
@@ -119,6 +126,13 @@ describe('MeetupPage', () => {
     respondToMeetupInvitation.mockReset()
     leaveMeetup.mockReset()
     cancelMeetup.mockReset()
+    getMeetupInviteLink.mockReset()
+    getMeetupInviteLink.mockResolvedValue({
+      state: 'none',
+      expires_at: null,
+      revoked_at: null,
+      created_at: null,
+    })
     getCatalog.mockResolvedValue([])
     listFriendships.mockResolvedValue([])
   })
@@ -133,9 +147,9 @@ describe('MeetupPage', () => {
       await screen.findByRole('heading', { name: 'Vôlei na quadra' }),
     ).toBeVisible()
     expect(screen.getByText(/1 vaga disponível/)).toBeVisible()
-    expect(screen.getByRole('list', { name: 'Participantes confirmados' })).toHaveTextContent(
-      'ana',
-    )
+    expect(
+      screen.getByRole('list', { name: 'Participantes confirmados' }),
+    ).toHaveTextContent('ana')
     await user.click(screen.getByRole('button', { name: 'Aceitar convite' }))
     expect(respondToMeetupInvitation).toHaveBeenCalledWith(
       detail.myInvitation?.id,

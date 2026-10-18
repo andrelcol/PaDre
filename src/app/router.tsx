@@ -12,6 +12,7 @@ import { MeetupsPage } from '@/pages/MeetupsPage.tsx'
 import { NewMeetupPage } from '@/pages/NewMeetupPage.tsx'
 import { EditProfilePage } from '@/pages/EditProfilePage.tsx'
 import { HomePage } from '@/pages/HomePage.tsx'
+import { InvitePage } from '@/pages/InvitePage.tsx'
 import { LoginPage } from '@/pages/LoginPage.tsx'
 import { ProfilePage } from '@/pages/ProfilePage.tsx'
 import { RecoverPasswordPage } from '@/pages/RecoverPasswordPage.tsx'
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { path: '/', element: <HomePage /> },
+      { path: '/convite/:token', element: <InvitePage /> },
       { path: '/modalidades', element: <CatalogPage /> },
       {
         path: '/encontros',
