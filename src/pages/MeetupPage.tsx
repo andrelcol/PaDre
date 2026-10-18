@@ -22,6 +22,7 @@ import {
   type MeetupFormValues,
 } from '@/domains/meetups/model/meetup.ts'
 import { wallClockInZone } from '@/domains/meetups/model/schedule.ts'
+import { MatchSection } from '@/domains/matches/components/match-section.tsx'
 import { useCatalog } from '@/domains/sports/api/queries.ts'
 
 export function MeetupPage() {
@@ -199,6 +200,25 @@ export function MeetupPage() {
             })
           }
           onEdit={() => setEditing(true)}
+        />
+      ) : null}
+      {detail && !editing ? (
+        <MatchSection
+          meetupId={detail.id}
+          organizer={detail.isOrganizer}
+          meetupStatus={detail.status}
+          playersPerSideMin={
+            catalog.data
+              ?.flatMap((sport) => sport.formats)
+              .find((format) => format.id === detail.sportFormatId)
+              ?.playersPerSideMin ?? null
+          }
+          playersPerSideMax={
+            catalog.data
+              ?.flatMap((sport) => sport.formats)
+              .find((format) => format.id === detail.sportFormatId)
+              ?.playersPerSideMax ?? null
+          }
         />
       ) : null}
       {detail && !editing && organizer ? (

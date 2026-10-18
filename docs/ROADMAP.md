@@ -42,13 +42,9 @@ Fora: estatísticas.
 
 ## Fase 6 — Partidas
 
-Objetivo: partida dentro do encontro, lados, participantes e resultado confirmado com revisão.
+Entregue: várias partidas por encontro, dois lados com nome livre, escalação entre confirmados, placar validado pela versão da regra gravada na partida, desfecho calculado no banco, confirmação de um jogador de cada lado, contestação, revisão que invalida confirmações anteriores e histórico de ações. Cancelar o encontro anula rascunho, pendente e contestada. Partida confirmada permanece.
 
-Dependências: encontros e regras da Fase 2.
-
-Fora: projeção agregada e chat.
-
-Pronto quando: só o resultado confirmado é aceito como verdade, rascunho não conta, e correção gera revisão em vez de apagar o histórico.
+Fora: projeção agregada, sorteio de equipes e chat.
 
 ## Fase 7 — Estatísticas
 

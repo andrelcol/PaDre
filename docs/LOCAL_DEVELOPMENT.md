@@ -105,6 +105,10 @@ A página `/amigos` pede amizade pelo username exato. Aceitar, recusar, cancelar
 
 A página `/encontros` lista os próximos, os que a pessoa organiza, os convites pendentes e os anteriores ou cancelados. Criar um encontro escolhe modalidade e formato no catálogo vivo, grava o horário em UTC no fuso informado e guarda a versão da regra daquele formato. Convidar um amigo exige amizade confirmada. O link em `/convite/:token` mostra um preview sem o endereço e, depois do login ou do cadastro, pede uma confirmação para ocupar a vaga. O retorno do cadastro fica na query `retorno` e só aceita esse caminho. Aceitar, recusar, sair, cancelar, gerar e revogar passam por funções no banco. O detalhe está nas ADR-022 e ADR-023.
 
+## Partidas
+
+No detalhe do encontro, quem organiza cria a partida, nomeia os dois lados e escolhe confirmados. O mesmo jogador não entra nos dois lados. O formulário do placar muda com o tipo da regra gravada na partida. O envio para confirmação só fica disponível depois do início. Um jogador de cada lado confirma ou contesta. O histórico fica na própria partida. O detalhe está na ADR-024.
+
 ## Catálogo
 
 Modalidades, formatos e regras ativas podem ser lidos com a chave anônima em `/rest/v1/sports`. Não há escrita pelo cliente. Uma modalidade nova entra numa migration posterior, com UUID fixo. A versão de uma regra não se altera: a migration desativa a versão corrente e insere a seguinte. O procedimento está na ADR-019 e no modelo de domínio.

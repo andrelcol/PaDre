@@ -52,6 +52,18 @@ vi.mock('@/domains/friendships/api/friendships.ts', () => ({
 
 vi.mock('@/domains/sports/api/catalog.ts', () => ({ getCatalog }))
 
+vi.mock('@/domains/matches/api/matches.ts', () => ({
+  listMeetupMatches: vi.fn(async () => ({ roster: [], matches: [] })),
+  createMatch: vi.fn(),
+  setMatchLineup: vi.fn(),
+  setMatchResult: vi.fn(),
+  submitMatch: vi.fn(),
+  confirmMatch: vi.fn(),
+  disputeMatch: vi.fn(),
+  reviseMatchResult: vi.fn(),
+  voidMatch: vi.fn(),
+}))
+
 const detail: MeetupDetail = {
   id: 'a1000000-0000-4000-8000-000000000031',
   title: 'Vôlei na quadra',

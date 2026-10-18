@@ -132,18 +132,36 @@ Toda comunidade permanece com ao menos um administrador. Encontro coletivo é um
 
 ## Partidas
 
-`Match` acontece dentro de um encontro.
+Implementado em `matches`, `match_teams`, `match_players`, `match_results`, `match_confirmations` e `match_audit_logs`. A decisão está na [ADR-024](./DECISIONS.md).
 
-- modalidade, formato e `scoring_rule_id` da versão usada
-- estado: `draft`, `confirmed`, `voided`
-- `confirmed_at` e autoria da confirmação
-- anulação com motivo, que tira a partida das estatísticas
+Uma partida pertence a um único encontro e copia `scoring_rule_versions.id` no momento da criação. A modalidade e o formato continuam no encontro. Validar o placar lê essa versão, não a regra que estiver ativa depois. Um encontro tem várias partidas. Confirmar partidas não muda o encontro para `completed`.
 
-`MatchSide` é um lado (não uma equipe permanente do produto). `MatchParticipant` liga uma pessoa a um lado. Equipes duradouras, se existirem um dia, não substituem o lado desta partida: o lado é o que o resultado precisa.
+Estados: `draft`, `pending_confirmation`, `disputed`, `confirmed` e `voided`. Transições:
 
-`MatchResult` é revisado. Uma revisão vigente por partida. Correção insere outra revisão e marca a anterior como substituída. Cliente não atualiza projeção.
+- `draft` vai para `pending_confirmation` no envio, ou para `voided`.
+- `pending_confirmation` vai para `confirmed` quando os dois lados confirmam a mesma revisão, para `disputed`, de volta a `pending_confirmation` numa revisão, ou para `voided`.
+- `disputed` volta a `pending_confirmation` numa revisão, ou vai para `voided`.
+- `confirmed` e `voided` não mudam. Não há exclusão física de resultado confirmado.
 
-Somente `confirmed` com revisão vigente entra na estatística.
+Cada partida tem exatamente dois lados, `side` 1 e 2, com nome editável. O banco não fixa “Time A” ou “Time B”. `match_players` liga um usuário a um lado. A mesma pessoa não entra nos dois lados da mesma partida, precisa estar `confirmed` no encontro no momento da escalação, e a quantidade obedece `players_per_side_min` e `players_per_side_max` do formato. A mesma pessoa pode jogar várias partidas do encontro, ou nenhuma. A escalação de uma partida não altera a outra. Quem sai do encontro depois permanece na escalação já gravada.
+
+`match_results` guarda o placar e o desfecho calculado (`side_1`, `side_2` ou `draw`). Há uma revisão vigente (`superseded_at` nulo). Corrigir depois do envio marca a revisão anterior e insere a seguinte. Confirmações antigas ficam presas à revisão anterior e não contam. O cliente não envia o vencedor.
+
+O placar depende do `rule_type` da versão:
+
+- `set_based`: `{ "sets": [[pontos_1, pontos_2], ...] }`. Cada set fecha na pontuação da regra, com a diferença mínima. O set decisivo, quando `deciding_set_points` não é nulo, é só o último set possível (`sets_to_win * 2 - 1`). Sets além de alguém já ter vencido são recusados.
+- `goal_based`: `{ "goals": [gols_1, gols_2] }`. Empate só entra se `allows_draw` for verdadeiro. As versões atuais de futsal permitem empate e têm `tie_break` `none`.
+- `game_based`: sets de `{ "games": [a, b], "tiebreak": [a, b] | null }` ou, no set decisivo, `{ "points": [a, b] }`. O tiebreak só existe quando os games estão empatados no alvo. O alvo do tiebreak e do super tiebreak é “quem chega primeiro”, porque a versão não tem diferença mínima própria.
+
+Nenhuma versão cadastrada tem `point_cap`. O motor já recusa placar acima de um teto, se uma versão futura gravar essa chave. Não há placar separado de prorrogação ou pênaltis: se `allows_draw` for falso, gols iguais são inválidos. Um tiebreak com diferença mínima de dois pontos exigiria uma chave nova, numa versão nova da regra.
+
+A confirmação é uma linha por lado na revisão vigente, feita por um jogador daquele lado. A mesma pessoa não confirma os dois lados. O organizador confirma só o lado em que está escalado. Consenso dos dois lados, com o encontro `scheduled` e já iniciado, grava `confirmed` e `confirmed_at`. Contestação vai para `disputed` e impede essa transição até uma revisão. Cancelar o encontro anula partidas em `draft`, `pending_confirmation` e `disputed`, e deixa `confirmed` como está.
+
+`match_audit_logs` registra criação, escalação, placar, envio, confirmação, contestação, revisão, confirmação definitiva e anulação. Cada linha tem partida, autor, ação, data e a revisão quando ela existe. Não há escrita direta do cliente.
+
+Somente `confirmed` com a revisão vigente poderá alimentar estatística. Esta etapa não grava projeção.
+
+Um tipo novo de pontuação entra assim: a função `private.scoring_config_is_valid` passa a aceitar as chaves; uma migration insere `scoring_rule_versions` nova, sem alterar as versões antigas; `resolveOutcome` e `private.resolve_match_outcome` ganham o ramo; o formulário da partida ganha o contrato desse tipo.
 
 ## Estatísticas
 

@@ -73,6 +73,14 @@ O username dos participantes sai de `get_meetup` e `list_my_meetups`. `profiles`
 
 `meetup_invite_links` não tem `select` para o cliente. O preview público é `preview_meetup_invite`, `security invoker`, e o corpo em `private` devolve título, modalidade, formato, horário, nome do local e vagas. Endereço, e-mail, organizador e a lista de pessoas ficam de fora. `anon` executa só esse corpo, para o wrapper funcionar, e não executa as outras funções de `private`. Entrar pelo link usa a mesma trava `for update` do encontro. A decisão está na [ADR-023](./DECISIONS.md).
 
+### Autorização de partida
+
+`matches`, `match_teams`, `match_players`, `match_results`, `match_confirmations` e `match_audit_logs` têm RLS forçado e nenhum `select`, `insert`, `update` ou `delete` para `anon` ou `authenticated`. Um gatilho recusa escrita fora das funções, inclusive a troca direta de `status` para `confirmed` e a alteração de partida já confirmada ou anulada. O sinal é o GUC `padre.match_write`.
+
+A leitura é `list_meetup_matches`, que reutiliza `private.can_read_meetup`. A resposta traz username, escalação, placar vigente, confirmações dessa revisão e o histórico de ações. Não traz e-mail nem preferências.
+
+Criar, escalar, gravar placar, enviar, revisar e anular exigem o organizador do encontro. Confirmar e contestar exigem um jogador escalado, e a confirmação grava o lado desse jogador. A trava é a linha do encontro e depois a linha da partida, a mesma ordem do cancelamento, para as duas operações não cruzarem. Duas confirmações de lados diferentes na mesma revisão fecham a partida uma vez. O corpo fica em `private`; o PostgREST vê só o wrapper `security invoker`. `anon` não executa essas funções. A decisão está na [ADR-024](./DECISIONS.md).
+
 ### Autorização do catálogo
 
 `sports`, `sport_formats` e `scoring_rule_versions` têm RLS forçado. A política de leitura exige `active` na própria linha e nos pais. Não há política de insert, update ou delete, e esses comandos não são concedidos a `anon` nem a `authenticated`. A configuração da regra é validada por `private.scoring_config_is_valid` antes de gravar. O cliente confere de novo com Zod ao ler.
@@ -81,25 +89,25 @@ O username dos participantes sai de `get_meetup` e `list_my_meetups`. `profiles`
 
 Toda tabela exposta ao cliente terá política. O desenho, ainda sem SQL:
 
-| Dado                    | Quem lê                                             | Quem escreve                                        |
-| ----------------------- | --------------------------------------------------- | --------------------------------------------------- |
-| Perfil                  | A própria pessoa; outras, conforme a visibilidade   | A própria pessoa                                    |
-| Amizade                 | Só os dois envolvidos                               | Funções: pedir, aceitar, recusar, cancelar, remover |
-| Comunidade e membros    | Membros; comunidade pública só no que for público   | Administradores; a pessoa sai da própria vaga       |
-| Local                   | Quem vê um encontro que o usa, ou quem criou        | Quem cria; edição por quem criou                    |
-| Encontro e presenças    | Organizador, confirmado ou convite pendente        | Funções: criar, editar, convidar, aceitar, sair, cancelar, entrar por link |
-| Catálogo esportivo      | Anônimo e autenticado, só linhas ativas             | Ninguém no cliente. Só migration                    |
-| Convite por link        | Preview estreito, sem a tabela                      | Organização gera e revoga. Entrada por função       |
-| Partida e resultado     | Quem vê o encontro                                  | Organização, enquanto rascunho. Confirmação única   |
-| Projeção de estatística | Conforme a privacidade de quem é medido             | Nenhum cliente. Só a função de projeção             |
+| Dado                    | Quem lê                                           | Quem escreve                                                               |
+| ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------------- |
+| Perfil                  | A própria pessoa; outras, conforme a visibilidade | A própria pessoa                                                           |
+| Amizade                 | Só os dois envolvidos                             | Funções: pedir, aceitar, recusar, cancelar, remover                        |
+| Comunidade e membros    | Membros; comunidade pública só no que for público | Administradores; a pessoa sai da própria vaga                              |
+| Local                   | Quem vê um encontro que o usa, ou quem criou      | Quem cria; edição por quem criou                                           |
+| Encontro e presenças    | Organizador, confirmado ou convite pendente       | Funções: criar, editar, convidar, aceitar, sair, cancelar, entrar por link |
+| Catálogo esportivo      | Anônimo e autenticado, só linhas ativas           | Ninguém no cliente. Só migration                                           |
+| Convite por link        | Preview estreito, sem a tabela                    | Organização gera e revoga. Entrada por função                              |
+| Partida e resultado     | Quem vê o encontro, pela função de lista          | Organização cria e revisa. Cada lado confirma o próprio                    |
+| Projeção de estatística | Conforme a privacidade de quem é medido           | Nenhum cliente. Só a função de projeção                                    |
 
 Esconder botão não é permissão. Funções `security definer`, quando existirem, checam o mesmo critério e não recebem a chave de serviço no browser.
 
 ## Estatísticas
 
-Estados que contam: partida `confirmed` com a revisão vigente do resultado. Rascunho e partida anulada ficam de fora.
+Estados que contam: partida `confirmed` com a revisão vigente do resultado. Rascunho, pendente, contestada e anulada ficam de fora. A projeção ainda não existe.
 
-Uma função pura, por tipo de regra, interpreta o placar e devolve lado vencedor ou empate. A confirmação grava esse desfecho junto do resultado, calculado, não digitado. A projeção agrega desfechos.
+`resolveOutcome`, no cliente, e `private.resolve_match_outcome`, no banco, interpretam o placar da versão gravada na partida e devolvem lado vencedor ou empate. A gravação persiste esse desfecho. O cliente não escolhe o vencedor. A projeção, quando existir, agrega só esses desfechos.
 
 A única escritora das projeções é uma função idempotente por partida: apaga as linhas daquela partida e as reinsere a partir do resultado vigente. Reprocessar é chamá-la para cada partida confirmada. Gatilho, job e correção usam o mesmo caminho. Não existe contador de vitórias atualizado por fora.
 
@@ -128,7 +136,7 @@ TypeScript `strict`. ESLint e Prettier no código. Vitest e Testing Library nas 
 
 ## Riscos
 
-- Payload de placar flexível vira gaveta se a validação atrasar. A configuração da regra já é validada. A fase de partidas valida o placar jogado.
+- Payload de placar flexível vira gaveta se a validação atrasar. A configuração da regra e o placar jogado são validados no banco, com o mesmo contrato no Zod da tela.
 - Política RLS frouxa vaza histórico. Cada tabela nova sai com teste de permissão, não só com a migration.
 - Qualquer escrita direta na projeção faz a estatística divergir. A política nega escrita do cliente.
 - `timestamp` sem fuso, ou data civil guardada como texto, quebra o dia do jogo.
@@ -136,4 +144,4 @@ TypeScript `strict`. ESLint e Prettier no código. Vitest e Testing Library nas 
 
 ## Fora desta etapa
 
-Partida, comunidade, chat e mapa continuam de fora. A identidade local — conta, sessão e perfil — está descrita em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
+Comunidade, chat, estatística e mapa continuam de fora. A identidade local — conta, sessão e perfil — está descrita em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
