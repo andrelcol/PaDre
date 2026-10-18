@@ -16,6 +16,9 @@ export default tseslint.config(
       'playwright-report',
       'test-results',
       'blob-report',
+      '.tools',
+      'supabase/.runtime',
+      'supabase/.temp',
     ],
   },
   js.configs.recommended,
@@ -36,6 +39,19 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+    },
+  },
+  {
+    files: [
+      'scripts/**/*.mjs',
+      'vite.config.ts',
+      'vitest.db.config.ts',
+      'playwright.config.ts',
+      'supabase/tests/**/*.ts',
+      'e2e/**/*.ts',
+    ],
+    languageOptions: {
+      globals: globals.node,
     },
   },
 )

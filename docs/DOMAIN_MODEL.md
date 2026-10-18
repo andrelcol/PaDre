@@ -1,6 +1,6 @@
 # Modelo de domínio
 
-Modelo conceitual. Não é esquema SQL e não há migration aplicada. Os nomes de código ficam em inglês; os nomes de produto, em português.
+Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. A migration de identidade está em `supabase/migrations`. O restante deste documento ainda não virou tabela.
 
 ## Limites
 
@@ -13,13 +13,18 @@ Modelo conceitual. Não é esquema SQL e não há migration aplicada. Os nomes d
 
 ## Pessoas
 
-`Profile` estende o usuário do Auth.
+`Profile` estende o usuário do Auth e usa o mesmo UUID.
 
-- nome de exibição, avatar, bio
-- `time_zone`: fuso IANA preferido
-- visibilidade independente para perfil, histórico e estatísticas: `public`, `friends` ou `private`
+Implementado agora:
 
-Padrão proposto, revisável antes da implementação: perfil público, histórico e estatísticas visíveis para amigos.
+- `username`, único sem distinguir maiúsculas, guardado em minúsculas no formato `^[a-z][a-z0-9_]{2,29}$`
+- `display_name`, com acentos
+- `visibility`: `private` ou `public`, padrão `private`
+- `time_zone` IANA em `profile_preferences`, visível só para o próprio usuário
+
+Ainda não entram avatar, bio, nem visibilidade `friends`. Histórico e estatísticas também não têm coluna nesta fase. A leitura de um perfil público exige autenticação. Preferências não saem nessa leitura.
+
+Padrão anterior, perfil público e histórico visível para amigos, foi adiado. A revisão está na [ADR-017](./DECISIONS.md).
 
 ## Catálogo esportivo
 

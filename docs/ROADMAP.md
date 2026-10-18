@@ -2,25 +2,17 @@
 
 Cada fase é pequena o bastante para ser verificada e, se estiver consistente, commitada sozinha. Não se antecipa a fase seguinte.
 
-O modelo conceitual está em [DOMAIN_MODEL.md](./DOMAIN_MODEL.md). A primeira migration nasce na fase de contas, não antes.
+O modelo conceitual está em [DOMAIN_MODEL.md](./DOMAIN_MODEL.md). A migration de contas e perfil já existe. As seguintes continuam nascendo na fase que for usá-las.
 
 ## Fase 0 — Fundação
 
-Entregue nesta etapa: documentação, regras do Cursor, cliente React com TypeScript strict, Tailwind, shadcn/ui, roteamento, TanStack Query, ESLint, Prettier, Vitest e Playwright. A tela inicial lista as cinco modalidades e deixa claro que o restante ainda não existe.
-
-Fora dela: Supabase, tabelas, Auth, partidas, comunidades, chat, mapa e estatísticas.
+Entregue: documentação, regras do Cursor, cliente React com TypeScript strict, Tailwind, shadcn/ui, roteamento, TanStack Query, ESLint, Prettier, Vitest e Playwright. A tela inicial lista as cinco modalidades.
 
 ## Fase 1 — Contas e perfil
 
-Objetivo: Supabase local, Auth e perfil com fuso e privacidade.
-
-Dependências: Fase 0 e o modelo de `Profile`.
-
-Inclui: migration inicial, políticas de `profiles`, cliente Supabase só com a chave anônima, sessão e tela de perfil próprio.
+Entregue: Supabase local, Auth, perfil com fuso e visibilidade, sessão e recuperação de senha. O procedimento está em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
 
 Fora: amigos, encontros, catálogo persistido.
-
-Pronto quando: uma pessoa cria conta, edita o próprio perfil e as políticas impedem editar o perfil alheio. Teste de RLS cobre esse caso.
 
 ## Fase 2 — Catálogo esportivo
 

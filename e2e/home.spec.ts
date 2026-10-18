@@ -12,6 +12,6 @@ test('home page shows the product and the opening sports', async ({ page }) => {
   await expect(page.getByText('Futsal')).toBeVisible()
   await expect(page.getByText('Beach tennis')).toBeVisible()
   await expect(
-    page.getByText('Contas, encontros e partidas entram nas próximas etapas.'),
+    page.getByText('Encontros e partidas entram nas próximas etapas.'),
   ).toBeVisible()
 })

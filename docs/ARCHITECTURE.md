@@ -2,7 +2,7 @@
 
 PaDre é uma aplicação web de página única apoiada em Supabase. O cliente React organiza a interface e as regras puras. PostgreSQL, com Row Level Security, é a fronteira de autorização e a fonte dos dados confirmados.
 
-Nada disso está ligado a um projeto Supabase remoto. O esquema físico só entra, em migrations versionadas, depois que o modelo em [DOMAIN_MODEL.md](./DOMAIN_MODEL.md) for a base da etapa correspondente.
+Nada disso está ligado a um projeto Supabase remoto. A identidade já tem migration versionada. O restante do esquema entra quando a fase correspondente for a base da etapa.
 
 ## Estilo
 
@@ -44,11 +44,16 @@ Encontro pode ter `community_id` nulo. Partida pertence a um encontro. Ranking e
 
 ## Backend
 
-- Supabase Auth identifica a pessoa. `profiles` completa o que o Auth não modela.
+- Supabase Auth identifica a pessoa. `profiles` completa o que o Auth não modela, com o mesmo UUID.
 - PostgreSQL guarda o domínio. PostGIS entra na migration de locais (`geography(Point, 4326)`), não antes.
 - Realtime entra com chat e enquete. Não há canal aberto nesta etapa.
 - A chave `anon` pode ir para o cliente. A `service_role` não vai. Ela não autoriza leitura; as políticas autorizam.
 - Mudança de esquema só por arquivo em `supabase/migrations`, na ordem, aplicado primeiro num Supabase local.
+- O ambiente local desta máquina não tem Docker. `npm run supabase:start` sobe os mesmos serviços por um runtime compatível, sem projeto remoto. O procedimento está em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
+
+### Autorização de identidade
+
+`profiles` é o que outra pessoa autenticada pode ver quando `visibility = public`: `username`, `display_name` e a própria visibilidade. `profile_preferences` guarda o fuso e só o dono lê. Anônimo não recebe `select`. Não há política de insert nem delete para o cliente: o perfil nasce no gatilho de `auth.users`. Detalhe e políticas em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
 
 ### Autorização prevista
 
@@ -108,4 +113,4 @@ TypeScript `strict`. ESLint e Prettier no código. Vitest e Testing Library nas 
 
 ## Fora desta etapa
 
-Não há cliente Supabase, migration, Auth, partida, comunidade, chat nem mapa. A tela inicial só mostra que a casca abre e quais são as modalidades iniciais.
+Partida, comunidade, chat e mapa continuam de fora. A identidade local — conta, sessão e perfil — está descrita em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).

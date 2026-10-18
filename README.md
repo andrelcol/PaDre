@@ -2,7 +2,7 @@
 
 Plataforma social para organizar encontros esportivos presenciais e acompanhar o que foi jogado.
 
-Esta etapa entrega a fundação: documentação, regras de trabalho e um cliente React que abre na tela inicial. Contas, encontros, partidas, comunidades, chat e estatísticas ainda não existem.
+Esta etapa entrega conta, sessão e perfil em um Supabase local. Encontros, partidas, comunidades, chat e estatísticas ainda não existem.
 
 ## Requisitos do produto
 
@@ -23,16 +23,17 @@ O desenho está em:
 - [docs/DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)
 - [docs/ROADMAP.md](docs/ROADMAP.md)
 - [docs/DECISIONS.md](docs/DECISIONS.md)
+- [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md)
 
 ## Stack
 
 - React 19, TypeScript 6 em modo strict, Vite 8
 - Tailwind CSS 4 e shadcn/ui
 - React Router 8 e TanStack Query 5
-- Zod 4, reservado para validar formulários, placares e respostas externas
+- Zod 4, para validar formulários, placares e respostas externas
 - ESLint 10 e Prettier 3
 - Vitest 5, Testing Library e Playwright
-- Supabase, PostgreSQL, Auth, Realtime e PostGIS nas próximas fases. Não há projeto remoto ligado.
+- Supabase local: Auth, PostgREST e Postgres 17. Não há projeto remoto ligado.
 
 O template atual do Vite sugere oxlint. O projeto usa ESLint, conforme [ADR-011](docs/DECISIONS.md).
 
@@ -58,27 +59,33 @@ npx npm@12 install
 
 ```bash
 npm install
+npm run supabase:start
 npm run dev
 ```
 
-A aplicação fica em `http://127.0.0.1:5173`.
+A aplicação fica em `http://127.0.0.1:5173`. O Supabase local fica em `http://127.0.0.1:54321`. O passo a passo, as políticas e a recuperação de senha estão em [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md).
 
-Variáveis previstas para a fase de autenticação estão em `.env.example`. Não coloque segredo em `.env` versionado. A chave `service_role` do Supabase não entra no cliente.
+`.env.local` é gerado pelo start e não entra no Git. O frontend só usa `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. A chave `service_role` não entra no cliente.
 
 ## Scripts
 
-| Comando                | O que faz                      |
-| ---------------------- | ------------------------------ |
-| `npm run dev`          | Sobe o Vite                    |
-| `npm run build`        | Checa tipos e gera `dist/`     |
-| `npm run preview`      | Serve o build                  |
-| `npm run typecheck`    | `tsc -b`                       |
-| `npm run lint`         | ESLint                         |
-| `npm run format`       | Prettier em modo escrita       |
-| `npm run format:check` | Prettier em modo verificação   |
-| `npm test`             | Vitest uma vez                 |
-| `npm run test:watch`   | Vitest em modo interativo      |
-| `npm run test:e2e`     | Playwright (sobe o dev server) |
+| Comando                  | O que faz                                     |
+| ------------------------ | --------------------------------------------- |
+| `npm run dev`            | Sobe o Vite                                   |
+| `npm run build`          | Checa tipos e gera `dist/`                    |
+| `npm run preview`        | Serve o build                                 |
+| `npm run typecheck`      | `tsc -b`                                      |
+| `npm run lint`           | ESLint                                        |
+| `npm run format`         | Prettier em modo escrita                      |
+| `npm run format:check`   | Prettier em modo verificação                  |
+| `npm test`               | Vitest uma vez                                |
+| `npm run test:watch`     | Vitest em modo interativo                     |
+| `npm run test:e2e`       | Playwright (sobe o dev server)                |
+| `npm run test:db`        | Políticas RLS no Postgres local               |
+| `npm run supabase:start` | Sobe Auth, API e Postgres locais              |
+| `npm run supabase:stop`  | Encerra esse ambiente                         |
+| `npm run supabase:reset` | Recria o banco local e reaplica as migrations |
+| `npm run supabase:types` | Gera os tipos TypeScript do schema            |
 
 Na primeira execução do Playwright, instale o navegador:
 
@@ -90,20 +97,23 @@ npx playwright install chromium
 
 ```text
 src/
-  app/                 rotas e providers
-  pages/               tela inicial
+  app/                 rotas, providers e casca
+  pages/               telas
+  domains/identity/    conta, sessão e perfil
   domains/sports/      lista das modalidades iniciais, ainda sem catálogo no banco
   shared/ui/           componentes shadcn/ui
-  shared/lib/          utilitário cn
+  shared/lib/          cliente Supabase, tipos gerados e utilitário cn
+supabase/
+  migrations/          esquema versionado
+  tests/               testes de RLS
 e2e/                   fluxo no navegador
 docs/                  visão, arquitetura, domínio, roteiro e decisões
 .cursor/rules/         arquitetura, código, segurança, testes e processo
 ```
 
-Regra de negócio futura fica em `src/domains/<domínio>/model`, não no componente. Acesso ao Supabase fica em `api/`. A tela inicial não simula essas camadas.
+Regra de negócio fica em `src/domains/<domínio>/model`. Acesso ao Supabase fica em `api/`.
 
 ## O que esta etapa não inclui
 
-- Cliente ou projeto Supabase
-- Migrations e tabelas
-- Autenticação, amigos, encontros, partidas, comunidades, chat, mapa ou estatísticas
+- Amizades, encontros, partidas, comunidades, chat, mapa ou estatísticas
+- Projeto Supabase remoto

@@ -18,9 +18,7 @@ describe('HomePage', () => {
     expect(screen.getByText('Vôlei de areia')).toBeVisible()
     expect(screen.getByText('Futevôlei')).toBeVisible()
     expect(
-      screen.getByText(
-        'Contas, encontros e partidas entram nas próximas etapas.',
-      ),
+      screen.getByText('Encontros e partidas entram nas próximas etapas.'),
     ).toBeVisible()
   })
 })

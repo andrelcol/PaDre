@@ -92,10 +92,10 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 
 ## ADR-012 — Sem esquema definitivo nesta fase
 
-- Status: aceita
+- Status: cumprida na Fase 0; a Fase 1 aplicou a migration que esta decisão já previa
 - Contexto: criar tabelas antes de fechar o modelo conceitual fixa nomes e relações cedo demais. Também não há pedido para usar um projeto Supabase remoto.
 - Decisão: a Fase 0 não adiciona migration, não instala o cliente Supabase e não altera projeto remoto. A primeira migration acompanha contas e perfil.
-- Consequências: a aplicação ainda não autentica. O `.env.example` só reserva os nomes das variáveis.
+- Consequências: a Fase 0 não autenticava. A Fase 1 adicionou `supabase/migrations/20261018170000_identity.sql` e o cliente com a chave anônima. Continua sem projeto remoto.
 - Alternativas: subir um esquema "provisório" costuma virar o esquema real.
 
 ## ADR-013 — Inglês no código, português na interface
@@ -108,10 +108,10 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 
 ## ADR-014 — Visibilidade padrão
 
-- Status: aceita para a modelagem; confirmar na Fase 1
+- Status: revista pela ADR-017
 - Contexto: histórico esportivo é mais sensível do que o nome.
-- Decisão proposta: nome e avatar públicos; histórico e estatísticas visíveis para amigos; encontro novo começa como `invite_only`.
-- Consequências: encontrar pessoas é possível sem abrir o retrospecto. A Fase 1 pode ajustar o padrão antes de haver dados reais.
+- Decisão proposta na fundação: nome e avatar públicos; histórico e estatísticas visíveis para amigos; encontro novo começa como `invite_only`.
+- Consequências: a Fase 1 não criou colunas de histórico nem de estatística. O padrão do perfil mudou antes de haver dados reais. Encontro `invite_only` continua valendo para a fase de encontros.
 - Alternativas: tudo público maximiza descoberta e exposição. Tudo privado dificulta o primeiro convite.
 
 ## ADR-015 — Node.js 22
@@ -121,3 +121,19 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 - Decisão: o projeto pede Node `>=22.22.2`, com `.nvmrc` em 22.23.3. O Node padrão do ambiente não foi alterado.
 - Consequências: quem abrir o repositório no Node 20 precisa trocar de versão antes de instalar e testar.
 - Alternativas: segurar React Router 7, Vitest 4 e jsdom 26 só para permanecer no Node 20 deixaria a fundação uma geração atrás das bibliotecas estáveis atuais.
+
+## ADR-016 — Supabase local sem Docker e sem projeto remoto
+
+- Status: aceita
+- Contexto: a máquina de desenvolvimento não tem Docker, e um `supabase link` reutilizaria outro projeto chamado PaDre. A fase pede persistência real e RLS.
+- Decisão: o CLI oficial fica como dependência (`supabase` 2.121.0) e o `config.toml` usa `project_id = "padre-identity-local"`. Sem Docker, `npm run supabase:start` sobe Postgres 17 embutido na porta 54322, GoTrue, PostgREST, Mailpit e um gateway em 127.0.0.1:54321. Segredos ficam em `supabase/.runtime`, ignorado pelo Git. A chave anônima vai para `.env.local`. A `service_role` não é escrita em variável `VITE_`.
+- Consequências: o ambiente é independente do Postgres da porta 5432 e de qualquer projeto remoto. Quando houver Docker, o mesmo `config.toml` serve ao CLI oficial; o runtime compatível continua sendo o caminho desta máquina.
+- Alternativas: exigir Docker pararia a fase. Uma máquina virtual só para o CLI seria mais pesada do que os binários já usados pelo CLI.
+
+## ADR-017 — Perfil público separado das preferências
+
+- Status: aceita; revisa a ADR-014 para a identidade
+- Contexto: a fundação sugeria nome público e histórico visível para amigos. Amizade ainda não existe, e fuso horário não deve vazar na leitura do perfil.
+- Decisão: `auth.users` é a conta. `profiles.id` é o mesmo UUID. `profiles` guarda `username`, `display_name`, `visibility`, `created_at` e `updated_at`. `profile_preferences` guarda `timezone`. Visibilidade inicial é só `private` ou `public`, padrão `private`. Username é normalizado com `trim` + minúsculas e precisa casar `^[a-z][a-z0-9_]{2,29}$`. `display_name` aceita acento, de 1 a 80 caracteres. Fuso é um nome IANA, padrão `America/Sao_Paulo`. O gatilho `private.handle_new_user` cria as duas linhas, ignora visibilidade e papel vindos do cliente e recusa username inválido. Outro gatilho força `role = authenticated`. Leitura de perfil público exige sessão. Preferências não entram nessa leitura.
+- Consequências: não há página para folhear perfis de outras pessoas; a política já permite a leitura autenticada do perfil público. `friends` fica para a fase de amizades. No ambiente local o GoTrue confirma o e-mail sozinho para o fluxo ser testável; produção ainda não está configurada.
+- Alternativas: uma tabela só misturaria fuso com dado público. Confiar no metadata para papel ou visibilidade inicial abriria elevação de privilégio.
