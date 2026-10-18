@@ -1,0 +1,34 @@
+---
+description: Limites de domínio, camadas e fonte de verdade das estatísticas
+alwaysApply: true
+---
+
+# Arquitetura
+
+PaDre é um cliente React por domínio. Supabase é o backend. Autorização real fica no Postgres (RLS), não no componente.
+
+## Domínios
+
+`identity`, `friendships`, `communities`, `meetups`, `invites`, `sports`, `matches`, `statistics`, `places`, `messaging`, `rankings`.
+
+Amizade não é vaga em comunidade. Encontro existe sem comunidade. Partida não é encontro. Estatística não é fonte de verdade.
+
+## Camadas
+
+Em `src/domains/<domínio>/`:
+
+- `components/` e páginas renderizam e encaminham eventos
+- `model/` guarda regra pura, sem React e sem Supabase
+- `api/` fala com o banco
+
+```tsx
+// ❌ placar decidido no componente
+const winner = sets[0] > sets[1] ? 'a' : 'b'
+
+// ✅ função pura, testável, do tipo da regra
+const winner = resolveOutcome(rule, result)
+```
+
+## Estatísticas
+
+Resultado confirmado da partida é a fonte de verdade. Projeção é derivada, idempotente e reprocessável. Não grave contador editável à parte.

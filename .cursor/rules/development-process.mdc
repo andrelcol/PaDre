@@ -1,0 +1,14 @@
+---
+description: Etapas pequenas, escopo fechado e critério para encerrar
+alwaysApply: true
+---
+
+# Processo
+
+Antes de implementar, deixe explícitos: objetivo, dependências, arquivos, impacto, riscos, testes e critérios de aceitação.
+
+- Implemente só o escopo da etapa. Não apresente fluxo incompleto como pronto.
+- Atualize a documentação afetada na mesma etapa.
+- Esquema de banco só em `supabase/migrations`. Não altere projeto Supabase remoto sem pedido explícito.
+- Ao encerrar: resumo, arquivos, comandos, resultados, pendências, próximo passo e, se o estado estiver consistente, sugestão de commit.
+- Sugira um contexto novo quando a etapa seguinte for outro domínio ou o histórico já estiver longo.

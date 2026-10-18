@@ -1,0 +1,21 @@
+---
+description: Vitest, Testing Library e Playwright sem simular função ausente
+globs: "**/*.{test,spec}.{ts,tsx}"
+alwaysApply: false
+---
+
+# Testes
+
+- Vitest para regra pura e componente.
+- Testing Library usa papel e nome acessível, sem depender de classe CSS.
+- Playwright cobre o fluxo no navegador.
+- Não substitua, com mock, uma função que a etapa deveria entregar de verdade.
+- Mock só isola efeito que o teste não deve executar, como rede ou relógio, e isso fica explícito.
+
+```tsx
+// ❌ o teste passa sem exercer o produto
+expect(true).toBe(true)
+
+// ✅ o que a pessoa vê
+expect(screen.getByRole('heading', { name: 'PaDre' })).toBeInTheDocument()
+```

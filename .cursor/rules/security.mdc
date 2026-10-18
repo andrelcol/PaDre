@@ -1,0 +1,20 @@
+---
+description: Segredos, RLS, convites e autorização no banco
+alwaysApply: true
+---
+
+# Segurança
+
+- Não grave segredo, `service_role` nem token cru no repositório, no cliente ou em log.
+- A chave anônima do Supabase pode ir ao cliente e não autoriza nada. A política autoriza.
+- Não trate botão escondido como permissão. Toda tabela exposta nasce com RLS.
+- Convite público guarda só o hash, com expiração. O resgate é função no servidor.
+- Perfil, histórico e estatísticas obedecem à privacidade no banco, não só na tela.
+
+```ts
+// ❌ o token vira chave de leitura
+await supabase.from('invites').select('*').eq('token', rawToken)
+
+// ✅ o servidor confere o hash e aplica a regra
+await supabase.rpc('accept_invite', { token: rawToken })
+```

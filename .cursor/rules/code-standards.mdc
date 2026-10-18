@@ -1,0 +1,24 @@
+---
+description: TypeScript strict, componentes e idioma do código
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Padrões de código
+
+TypeScript em `strict`. O projeto usa `erasableSyntaxOnly`: sem `enum` e sem namespace. Prefira união de literais.
+
+- Identificadores e módulos em inglês. Texto de interface em português.
+- Tipos entram com `import type`.
+- Componente funcional. Estado de servidor no TanStack Query, não em `useState`.
+- Valide com Zod o que cruza a borda: formulário, placar e resposta externa.
+- Não coloque regra de negócio em componente React.
+
+```ts
+// ❌
+enum MatchState { Draft, Confirmed }
+
+// ✅
+export const matchStates = ['draft', 'confirmed', 'voided'] as const
+export type MatchState = (typeof matchStates)[number]
+```
