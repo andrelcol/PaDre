@@ -9,6 +9,61 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      friendships: {
+        Row: {
+          accepted_at: string | null
+          addressee_id: string
+          closed_at: string | null
+          created_at: string
+          id: string
+          pair_high: string | null
+          pair_low: string | null
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          accepted_at?: string | null
+          addressee_id: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          pair_high?: never
+          pair_low?: never
+          requester_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          addressee_id?: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          pair_high?: never
+          pair_low?: never
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'friendships_addressee_id_fkey'
+            columns: ['addressee_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'friendships_requester_id_fkey'
+            columns: ['requester_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile_preferences: {
         Row: {
           timezone: string
@@ -196,6 +251,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      list_my_friendships: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          accepted_at: string
+          created_at: string
+          id: string
+          other_username: string
+          side: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      request_friendship: {
+        Args: { username: string }
+        Returns: {
+          id: string
+          other_username: string
+          status: string
+        }[]
+      }
+      respond_to_friendship: {
+        Args: { action: string; friendship_id: string }
+        Returns: {
+          id: string
+          other_username: string
+          status: string
+        }[]
+      }
       username_is_available: { Args: { candidate: string }; Returns: boolean }
     }
     Enums: {

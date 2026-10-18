@@ -6,6 +6,7 @@ import {
   RequireAuth,
 } from '@/domains/identity/components/guards.tsx'
 import { CatalogPage } from '@/pages/CatalogPage.tsx'
+import { FriendsPage } from '@/pages/FriendsPage.tsx'
 import { EditProfilePage } from '@/pages/EditProfilePage.tsx'
 import { HomePage } from '@/pages/HomePage.tsx'
 import { LoginPage } from '@/pages/LoginPage.tsx'
@@ -20,6 +21,14 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/modalidades', element: <CatalogPage /> },
+      {
+        path: '/amigos',
+        element: (
+          <RequireAuth>
+            <FriendsPage />
+          </RequireAuth>
+        ),
+      },
       {
         path: '/entrar',
         element: (

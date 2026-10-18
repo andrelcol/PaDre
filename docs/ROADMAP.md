@@ -22,13 +22,9 @@ Fora: registrar partida e calcular o vencedor. `resolveOutcome` fica para a fase
 
 ## Fase 3 — Amizades
 
-Objetivo: pedido, aceite, recusa e bloqueio.
+Entregue: pedido, aceite, recusa, cancelamento e remoção, com uma linha por par e espera de 24 horas para reenviar. O perfil privado continua fechado; a lista mostra só o username.
 
-Dependências: perfis.
-
-Fora: comunidades e convite de encontro.
-
-Pronto quando: só os dois envolvidos leem a relação, e bloqueio passa a afetar a visibilidade prevista.
+Fora: bloqueio, visibilidade `friends`, comunidades e convite de encontro. O bloqueio entra numa tabela própria antes de afetar o que o amigo vê.
 
 ## Fase 4 — Locais e encontros
 

@@ -55,6 +55,12 @@ Encontro pode ter `community_id` nulo. Partida pertence a um encontro. Ranking e
 
 `profiles` é o que outra pessoa autenticada pode ver quando `visibility = public`: `username`, `display_name` e a própria visibilidade. `profile_preferences` guarda o fuso e só o dono lê. Anônimo não recebe `select`. Não há política de insert nem delete para o cliente: o perfil nasce no gatilho de `auth.users`. Detalhe e políticas em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
 
+### Autorização de amizade
+
+`friendships` tem RLS forçado. `authenticated` só lê a linha em que é solicitante ou destinatário. Não há `insert`, `update` nem `delete` para o cliente. Um gatilho recusa escrita que não venha da função, inclusive a troca direta de `status` para `accepted`. As funções são `security definer` porque precisam achar um username de perfil privado e gravar a linha sem abrir o restante do perfil. O corpo fica em `private`. O que o PostgREST expõe são três funções estreitas, sem id de terceiro e com `auth.uid()` conferido dentro. `search_path` vazio. `anon` não executa nem lê.
+
+A política de `profiles` não consulta `friendships`, e a de `friendships` não consulta `profiles`. A leitura do username passa pela função, não por uma política cruzada.
+
 ### Autorização do catálogo
 
 `sports`, `sport_formats` e `scoring_rule_versions` têm RLS forçado. A política de leitura exige `active` na própria linha e nos pais. Não há política de insert, update ou delete, e esses comandos não são concedidos a `anon` nem a `authenticated`. A configuração da regra é validada por `private.scoring_config_is_valid` antes de gravar. O cliente confere de novo com Zod ao ler.
@@ -63,17 +69,17 @@ Encontro pode ter `community_id` nulo. Partida pertence a um encontro. Ranking e
 
 Toda tabela exposta ao cliente terá política. O desenho, ainda sem SQL:
 
-| Dado                    | Quem lê                                             | Quem escreve                                      |
-| ----------------------- | --------------------------------------------------- | ------------------------------------------------- |
-| Perfil                  | A própria pessoa; outras, conforme a visibilidade   | A própria pessoa                                  |
-| Amizade                 | Os dois envolvidos                                  | Quem solicita; os dois mudam o estado             |
-| Comunidade e membros    | Membros; comunidade pública só no que for público   | Administradores; a pessoa sai da própria vaga     |
-| Local                   | Quem vê um encontro que o usa, ou quem criou        | Quem cria; edição por quem criou                  |
-| Encontro e presenças    | Conforme visibilidade e participação                | Organização; a pessoa responde pelo próprio RSVP  |
-| Catálogo esportivo      | Anônimo e autenticado, só linhas ativas             | Ninguém no cliente. Só migration                  |
-| Convite                 | Organização. Cliente anônimo não seleciona a tabela | Organização cria e revoga. Resgate por função     |
-| Partida e resultado     | Quem vê o encontro                                  | Organização, enquanto rascunho. Confirmação única |
-| Projeção de estatística | Conforme a privacidade de quem é medido             | Nenhum cliente. Só a função de projeção           |
+| Dado                    | Quem lê                                             | Quem escreve                                        |
+| ----------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| Perfil                  | A própria pessoa; outras, conforme a visibilidade   | A própria pessoa                                    |
+| Amizade                 | Só os dois envolvidos                               | Funções: pedir, aceitar, recusar, cancelar, remover |
+| Comunidade e membros    | Membros; comunidade pública só no que for público   | Administradores; a pessoa sai da própria vaga       |
+| Local                   | Quem vê um encontro que o usa, ou quem criou        | Quem cria; edição por quem criou                    |
+| Encontro e presenças    | Conforme visibilidade e participação                | Organização; a pessoa responde pelo próprio RSVP    |
+| Catálogo esportivo      | Anônimo e autenticado, só linhas ativas             | Ninguém no cliente. Só migration                    |
+| Convite                 | Organização. Cliente anônimo não seleciona a tabela | Organização cria e revoga. Resgate por função       |
+| Partida e resultado     | Quem vê o encontro                                  | Organização, enquanto rascunho. Confirmação única   |
+| Projeção de estatística | Conforme a privacidade de quem é medido             | Nenhum cliente. Só a função de projeção             |
 
 Esconder botão não é permissão. Funções `security definer`, quando existirem, checam o mesmo critério e não recebem a chave de serviço no browser.
 

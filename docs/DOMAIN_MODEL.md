@@ -1,6 +1,6 @@
 # Modelo de domínio
 
-Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. Identidade e catálogo esportivo já têm migration em `supabase/migrations`. O restante deste documento ainda não virou tabela.
+Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. Identidade, catálogo esportivo e amizades já têm migration em `supabase/migrations`. O restante deste documento ainda não virou tabela.
 
 ## Limites
 
@@ -24,7 +24,27 @@ Implementado agora:
 
 Ainda não entram avatar, bio, nem visibilidade `friends`. Histórico e estatísticas também não têm coluna nesta fase. A leitura de um perfil público exige autenticação. Preferências não saem nessa leitura.
 
-Padrão anterior, perfil público e histórico visível para amigos, foi adiado. A revisão está na [ADR-017](./DECISIONS.md).
+Padrão anterior, perfil público e histórico visível para amigos, foi adiado. A revisão está na [ADR-017](./DECISIONS.md). Amizade confirmada não abre o perfil privado. A exceção está na [ADR-020](./DECISIONS.md).
+
+## Amizades
+
+Implementado em `friendships`. Uma relação é uma linha, com `requester_id` e `addressee_id`. O par é único pela ordem menor/maior dos dois ids, então A pedir B e B pedir A não criam duas amizades. Ninguém solicita a si mesmo.
+
+Estados: `pending`, `accepted`, `rejected`, `cancelled` e `removed`. `removed` é o fim de uma amizade que já tinha sido aceita. Recusa e cancelamento nunca passaram por aceite.
+
+| De                                      | Para        | Quem                   |
+| --------------------------------------- | ----------- | ---------------------- |
+| inexistente ou encerrada fora da espera | `pending`   | quem pede, pela função |
+| `pending`                               | `accepted`  | só o destinatário      |
+| `pending`                               | `rejected`  | só o destinatário      |
+| `pending`                               | `cancelled` | só o solicitante       |
+| `accepted`                              | `removed`   | qualquer um dos dois   |
+
+A escrita direta na tabela é recusada. As funções `request_friendship`, `respond_to_friendship` e `list_my_friendships` são o caminho. Elas travam o par na transação. Depois de recusa, cancelamento ou remoção, o mesmo par só volta a `pending` quando `closed_at` completa 24 horas. Há no máximo 30 solicitações pendentes de saída por pessoa.
+
+A lista devolve o username da outra pessoa, mesmo que o perfil seja privado. Não devolve nome de exibição, e-mail nem fuso. Busca é pelo username exato; não há listagem geral nem busca por e-mail.
+
+Bloqueio ainda não existe. Quando existir, será uma tabela própria, consultada por essas funções antes de criar ou listar a relação. Não será mais um estado de `friendships`, e não apaga vaga de comunidade.
 
 ## Catálogo esportivo
 

@@ -153,3 +153,11 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 - Decisão: três tabelas, `sports`, `sport_formats` e `scoring_rule_versions`. O slug da modalidade continua com hífen, como já estava na aplicação (`beach-volleyball`, não `beach_volleyball`). Jogadores ficam no formato, em mínimo e máximo. A regra guarda tipo, origem e um JSONB só com as chaves daquele tipo. Origem `official_summary` registra o formato do placar de uma competição conhecida, não o regulamento inteiro. Origem `app_proposal` é uma proposta do PaDre: vôlei 4x4, areia 4x4, beach tennis e futevôlei 2x2 a 18 pontos. A versão é imutável; uma partida futura aponta para o UUID da versão. A tela só lê.
 - Consequências: uma regra errada não se corrige com `update` no JSON. Cria-se a versão seguinte. O desfecho da partida continua fora desta fase.
 - Alternativas: um JSONB único por modalidade misturaria 6x6 e 4x4. Tratar futevôlei como formato de vôlei de areia apagaria a fronteira que o modelo já tinha. Implementar `resolveOutcome` agora testaria um placar que ainda não existe.
+
+## ADR-020 — Amizade é um par, e não abre o perfil
+
+- Status: aceita
+- Contexto: a amizade precisa ser a mesma dos dois lados, sem duas linhas concorrentes. O perfil nasce privado. A ADR-017 adiou a visibilidade `friends`. O roteiro também previa bloqueio.
+- Decisão: uma linha em `friendships`, única pelo par ordenado. O estado muda só pelas funções. Recusa, cancelamento e remoção esperam 24 horas antes de um novo pedido, e cada pessoa tem no máximo 30 pedidos de saída pendentes. Essas travas ficam no banco. A descoberta é o username exato: a função devolve esse username para quem participa da relação, mesmo com perfil privado, e nada além disso. `display_name`, e-mail e `profile_preferences` continuam fora. Não há visibilidade `friends` nesta fase. Bloqueio futuro é outra tabela, lida pelas mesmas funções, sem apagar a amizade nem a vaga em comunidade.
+- Consequências: reenviar no mesmo dia falha de propósito. Um perfil privado segue ilegível por `select` em `profiles`. O bloqueio ainda não esconde ninguém.
+- Alternativas: duas linhas espelhadas duplicam a relação sob concorrência. Abrir o perfil inteiro para amigos antecipa o compartilhamento de histórico. Tratar bloqueio como estado desta tabela misturaria “não quero esta amizade” com “não quero ser encontrado”.
