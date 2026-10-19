@@ -9,6 +9,402 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      communities: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+          visibility: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+          visibility: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'communities_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      community_invitations: {
+        Row: {
+          community_id: string
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          responded_at: string | null
+          status: string
+        }
+        ComputedFields: never
+        Insert: {
+          community_id: string
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          responded_at?: string | null
+          status: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'community_invitations_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_invitations_invitee_id_fkey'
+            columns: ['invitee_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_invitations_inviter_id_fkey'
+            columns: ['inviter_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          joined_at: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          community_id: string
+          joined_at?: string
+          role: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          joined_at?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'community_members_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_members_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      community_messages: {
+        Row: {
+          author_id: string
+          body: string
+          client_request_id: string
+          community_id: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          meetup_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          author_id: string
+          body?: string
+          client_request_id: string
+          community_id: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          meetup_id?: string | null
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          client_request_id?: string
+          community_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          meetup_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'community_messages_author_id_fkey'
+            columns: ['author_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_messages_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_messages_deleted_by_fkey'
+            columns: ['deleted_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_messages_meetup_id_fkey'
+            columns: ['meetup_id']
+            isOneToOne: false
+            referencedRelation: 'meetups'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      community_poll_options: {
+        Row: {
+          id: string
+          label: string
+          poll_id: string
+          position: number
+          sport_id: string | null
+          starts_at: string | null
+          time_zone: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          id?: string
+          label: string
+          poll_id: string
+          position: number
+          sport_id?: string | null
+          starts_at?: string | null
+          time_zone?: string | null
+        }
+        Update: {
+          id?: string
+          label?: string
+          poll_id?: string
+          position?: number
+          sport_id?: string | null
+          starts_at?: string | null
+          time_zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'community_poll_options_poll_id_fkey'
+            columns: ['poll_id']
+            isOneToOne: false
+            referencedRelation: 'community_polls'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_poll_options_sport_id_fkey'
+            columns: ['sport_id']
+            isOneToOne: false
+            referencedRelation: 'sports'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      community_poll_votes: {
+        Row: {
+          created_at: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          option_id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'community_poll_votes_option_id_fkey'
+            columns: ['option_id']
+            isOneToOne: false
+            referencedRelation: 'community_poll_options'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_poll_votes_poll_id_fkey'
+            columns: ['poll_id']
+            isOneToOne: false
+            referencedRelation: 'community_polls'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_poll_votes_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      community_polls: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          closes_at: string
+          community_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          kind: string
+          max_selections: number
+          question: string
+          selection_mode: string
+          status: string
+        }
+        ComputedFields: never
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closes_at: string
+          community_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          kind: string
+          max_selections: number
+          question: string
+          selection_mode: string
+          status?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closes_at?: string
+          community_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          kind?: string
+          max_selections?: number
+          question?: string
+          selection_mode?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'community_polls_closed_by_fkey'
+            columns: ['closed_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_polls_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_polls_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      community_sports: {
+        Row: {
+          community_id: string
+          sport_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          community_id: string
+          sport_id: string
+        }
+        Update: {
+          community_id?: string
+          sport_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'community_sports_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'community_sports_sport_id_fkey'
+            columns: ['sport_id']
+            isOneToOne: false
+            referencedRelation: 'sports'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       friendships: {
         Row: {
           accepted_at: string | null
@@ -429,6 +825,46 @@ export type Database = {
           },
         ]
       }
+      meetup_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          meetup_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          meetup_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          meetup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'meetup_audit_logs_actor_id_fkey'
+            columns: ['actor_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetup_audit_logs_meetup_id_fkey'
+            columns: ['meetup_id']
+            isOneToOne: false
+            referencedRelation: 'meetups'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       meetup_invitations: {
         Row: {
           created_at: string
@@ -573,6 +1009,7 @@ export type Database = {
       }
       meetups: {
         Row: {
+          community_id: string | null
           created_at: string
           description: string | null
           ends_at: string
@@ -591,6 +1028,7 @@ export type Database = {
         }
         ComputedFields: never
         Insert: {
+          community_id?: string | null
           created_at?: string
           description?: string | null
           ends_at: string
@@ -608,6 +1046,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          community_id?: string | null
           created_at?: string
           description?: string | null
           ends_at?: string
@@ -625,6 +1064,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'meetups_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'meetups_organizer_id_fkey'
             columns: ['organizer_id']
@@ -835,12 +1281,56 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_community_invitation: {
+        Args: { invitation_id: string }
+        Returns: Json
+      }
+      cancel_community_poll: { Args: { poll_id: string }; Returns: Json }
       cancel_meetup: { Args: { meetup_id: string }; Returns: string }
       cancel_meetup_invitation: {
         Args: { invitation_id: string }
         Returns: string
       }
+      close_community_poll: { Args: { poll_id: string }; Returns: Json }
       confirm_match: { Args: { match_id: string }; Returns: string }
+      create_community: {
+        Args: {
+          description: string
+          name: string
+          sport_ids: string[]
+          visibility: string
+        }
+        Returns: Json
+      }
+      create_community_meetup: {
+        Args: {
+          community_slug: string
+          description: string
+          ends_at: string
+          location_address: string
+          location_name: string
+          max_participants: number
+          scoring_rule_version_id: string
+          sport_format_id: string
+          starts_at: string
+          time_zone: string
+          title: string
+        }
+        Returns: string
+      }
+      create_community_poll: {
+        Args: {
+          closes_at: string
+          description: string
+          kind: string
+          max_selections: number
+          options: Json
+          question: string
+          selection_mode: string
+          slug: string
+        }
+        Returns: Json
+      }
       create_match: { Args: { meetup_id: string }; Returns: string }
       create_meetup: {
         Args: {
@@ -864,8 +1354,15 @@ export type Database = {
           token: string
         }[]
       }
+      delete_community_message: { Args: { message_id: string }; Returns: Json }
       dispute_match: { Args: { match_id: string }; Returns: string }
+      get_community: { Args: { slug: string }; Returns: Json }
+      get_community_poll: { Args: { poll_id: string }; Returns: Json }
       get_meetup: { Args: { meetup_id: string }; Returns: Json }
+      invite_to_community: {
+        Args: { slug: string; username: string }
+        Returns: Json
+      }
       invite_to_meetup: {
         Args: { meetup_id: string; username: string }
         Returns: {
@@ -874,9 +1371,44 @@ export type Database = {
           status: string
         }[]
       }
+      join_community_meetup: { Args: { meetup_id: string }; Returns: string }
       join_meetup_by_invite: { Args: { token: string }; Returns: string }
+      join_public_community: { Args: { slug: string }; Returns: Json }
+      leave_community: { Args: { slug: string }; Returns: Json }
       leave_meetup: { Args: { meetup_id: string }; Returns: string }
+      list_community_meetups: {
+        Args: {
+          community_slug: string
+          result_limit: number
+          result_offset: number
+        }
+        Returns: Json
+      }
+      list_community_messages: {
+        Args: {
+          before_created_at: string | null
+          before_id: string | null
+          page_limit: number
+          slug: string
+        }
+        Returns: Json
+      }
+      list_community_polls: {
+        Args: {
+          before_created_at: string | null
+          before_id: string | null
+          page_limit: number
+          slug: string
+          status: string
+        }
+        Returns: Json
+      }
       list_meetup_matches: { Args: { meetup_id: string }; Returns: Json }
+      list_my_communities: { Args: Record<PropertyKey, never>; Returns: Json }
+      list_my_community_invitations: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       list_my_friendships: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -906,6 +1438,10 @@ export type Database = {
           time_zone: string
           title: string
         }[]
+      }
+      list_public_communities: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       meetup_invite_link: { Args: { meetup_id: string }; Returns: Json }
       meetup_participant_statistics: {
@@ -940,6 +1476,10 @@ export type Database = {
         Returns: Json
       }
       preview_meetup_invite: { Args: { token: string }; Returns: Json }
+      remove_community_member: {
+        Args: { slug: string; username: string }
+        Returns: Json
+      }
       request_friendship: {
         Args: { username: string }
         Returns: {
@@ -947,6 +1487,10 @@ export type Database = {
           other_username: string
           status: string
         }[]
+      }
+      respond_to_community_invitation: {
+        Args: { action: string; invitation_id: string }
+        Returns: Json
       }
       respond_to_friendship: {
         Args: { action: string; friendship_id: string }
@@ -968,6 +1512,23 @@ export type Database = {
         Args: { meetup_id: string }
         Returns: string
       }
+      send_community_message: {
+        Args: {
+          body: string
+          client_request_id: string
+          meetup_id: string | null
+          slug: string
+        }
+        Returns: Json
+      }
+      set_community_member_role: {
+        Args: { role: string; slug: string; username: string }
+        Returns: Json
+      }
+      set_community_sports: {
+        Args: { slug: string; sport_ids: string[] }
+        Returns: Json
+      }
       set_match_lineup: {
         Args: {
           match_id: string
@@ -983,6 +1544,15 @@ export type Database = {
         Returns: string
       }
       submit_match: { Args: { match_id: string }; Returns: string }
+      update_community: {
+        Args: {
+          description: string
+          name: string
+          slug: string
+          visibility: string
+        }
+        Returns: Json
+      }
       update_meetup: {
         Args: {
           description: string
@@ -1001,6 +1571,10 @@ export type Database = {
       }
       username_is_available: { Args: { candidate: string }; Returns: boolean }
       void_match: { Args: { match_id: string }; Returns: string }
+      vote_community_poll: {
+        Args: { option_ids: string[]; poll_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

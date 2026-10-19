@@ -1,11 +1,11 @@
 # Modelo de domínio
 
-Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. Identidade, catálogo esportivo, amizades e encontros já têm migration em `supabase/migrations`. O restante deste documento ainda não virou tabela.
+Modelo conceitual. Os nomes de código ficam em inglês; os nomes de produto, em português. Identidade, catálogo esportivo, amizades, encontros, partidas, estatísticas e comunidades já têm migration em `supabase/migrations`. Locais, mensagens e rankings ainda não viraram tabela.
 
 ## Limites
 
 - Amizade (`friendships`) não cria vaga em comunidade.
-- Vaga em comunidade (`community_memberships`) não cria amizade.
+- Vaga em comunidade (`community_members`) não cria amizade.
 - Encontro (`meetups`) existe com ou sem comunidade.
 - Partida (`matches`) registra o jogo. O encontro registra o compromisso.
 - Modalidade, formato e regra de pontuação são catálogo. O resultado é da partida.
@@ -109,7 +109,7 @@ A capacidade inclui quem organiza, vai de 2 a 64 e conta só participantes `conf
 
 `MeetupInvitation` é um convite para uma conta já cadastrada e amiga. Estados: `pending`, `accepted`, `declined`, `cancelled`. Pendente não ocupa vaga. Aceitar cria a participação na mesma transação. Há no máximo uma linha por pessoa e encontro.
 
-`Place` com `geography(Point, 4326)`, `community_id` e visibilidade pública continuam conceito.
+`Place` com `geography(Point, 4326)` e visibilidade pública continua conceito. O `community_id` do encontro já existe e é outra relação.
 
 ## Convites
 
@@ -117,18 +117,86 @@ O convite para uma conta amiga continua em `meetup_invitations`. O link comparti
 
 Um convite interno `pending`, `declined` ou `cancelled` passa a `accepted` quando a mesma pessoa entra pelo link, na mesma transação da vaga. Quem já está `confirmed` recebe a mesma resposta de novo, sem segunda vaga. Quem está `left` ou `removed` não volta.
 
-Convite de comunidade, e-mail pré-vinculado e limite de usos separado da capacidade continuam fora. O resgate continua sendo função, nunca um `select` pelo token.
+O convite de comunidade é outra tabela, `community_invitations`, e não usa link. E-mail pré-vinculado e limite de usos separado da capacidade do encontro continuam fora. O resgate de qualquer convite continua sendo função, nunca um `select` pelo token.
 
 ## Comunidades
 
-`Community`: nome, descrição, visibilidade.
+Implementado em `communities`, `community_members`, `community_invitations` e `community_sports`. A rota é `/comunidades`. A decisão está na [ADR-027](./DECISIONS.md).
 
-`CommunityMembership`:
+`Community` guarda `slug` único, nome, descrição, `visibility` (`public` ou `private`), quem criou e as datas. O cliente não escolhe o slug. O nome pode repetir e pode ter acento. O slug nasce no servidor: minúsculas, hífen, sufixo numérico se o endereço já existir. Não há exclusão definitiva nesta versão. Apagar o perfil do criador é recusado enquanto a propriedade não se transfere.
 
-- papel: `member` ou `admin`
-- estado: `invited`, `active`, `left`, `removed`
+`CommunityMembership` é uma linha por pessoa e comunidade:
 
-Toda comunidade permanece com ao menos um administrador. Encontro coletivo é um encontro com `community_id` preenchido, não uma terceira entidade de evento.
+- papel: `owner`, `admin` ou `member`
+- estado: `active`, `left` ou `removed`
+
+O criador vira o único `owner` ativo na mesma transação. Esse papel não se atribui pela tela. O proprietário não sai e não é removido. Não há transferência de propriedade. Só o proprietário promove ou rebaixa administradores. Administrador remove integrante comum e não remove proprietário nem outro administrador. Integrante comum não muda papel e não remove ninguém. Quem sai ou é removido volta a `member`, para a reentrada não devolver o cargo.
+
+Reentrada, na mesma linha:
+
+- `left` entra de novo sozinho numa comunidade pública, ou aceita um convite novo numa privada.
+- `removed` não entra sozinho, nem na pública. A volta é um convite de proprietário ou administrador, aceito pela própria pessoa.
+
+`CommunityInvitation` é uma linha por convite, com `pending`, `accepted`, `declined` ou `cancelled`. Não exige amizade. O remetente é quem chama a função. Não há convite para si mesmo, nem dois pendentes para a mesma pessoa na mesma comunidade. Recusa ou cancelamento esperam 24 horas antes de outro convite daquele par. Cada remetente tem no máximo 30 convites pendentes. Quem não é o destinatário não responde. Proprietário e administrador cancelam pendente. Não há link compartilhável.
+
+A descoberta pública devolve nome, descrição, modalidades e a quantidade de integrantes ativos. Anônimo lê esse catálogo e o resumo de uma comunidade pública. Anônimo não entra. A lista de integrantes só aparece para quem está `active`, e traz username e papel. E-mail, nome de exibição e preferências ficam de fora. Comunidade privada não entra na descoberta. Quem não participa recebe o mesmo "não encontrada" de um slug inexistente.
+
+`community_sports` aponta para `sports`. Não há segundo catálogo. A comunidade tem ao menos uma modalidade. A chave impede duplicata. Modalidade inativa não entra numa associação nova. Uma já ligada continua visível pelo nome se o catálogo for desativado, e a linha não é apagada por isso. `sports` usa `on delete restrict`.
+
+Proprietário e administrador editam nome, descrição e modalidades. Só o proprietário muda a visibilidade.
+
+Apagar o perfil do proprietário não apaga a comunidade. `created_by` usa `on delete restrict`, e um gatilho explica que a conta é proprietária. A transferência de propriedade ainda não existe. O mesmo bloqueio vale para quem organiza um encontro, comunitário ou privado, e para quem registrou o cancelamento de um encontro comunitário.
+
+## Encontro comunitário
+
+Implementado na mesma tabela `meetups`, com `community_id` opcional. A decisão está na [ADR-028](./DECISIONS.md).
+
+`community_id` nulo é o encontro privado de hoje. Preenchido, o encontro pertence àquela comunidade. A coluna referencia `communities` com `on delete restrict`: excluir a comunidade não apaga encontro, partida nem estatística. Depois de criado, o vínculo não sai, não troca de comunidade e um encontro privado não vira comunitário.
+
+Qualquer integrante ativo cria o encontro. O papel de administrador não é exigido. A modalidade precisa estar em `community_sports` e no catálogo já usado pelo encontro. Formato, horário, local, capacidade e a versão da regra seguem a criação privada, na mesma transação, com quem organiza já confirmado e ocupando uma vaga. O encontro nasce `scheduled`. Não há fila de aprovação.
+
+A leitura é de integrante ativo, em comunidade pública ou privada. Descobrir a comunidade, ter um convite pendente dela ou ter confirmado presença antes não autoriza a consulta. Anônimo não lê. `list_community_meetups` pagina só os encontros daquela comunidade. `list_my_meetups` não mistura encontro privado de outra pessoa.
+
+A presença direta é `join_community_meetup`. Não cria amizade e não passa por convite. A vaga continua sendo a contagem de `confirmed`, com a linha do encontro travada depois da comunidade e da participação. Quem já está confirmado recebe a mesma resposta. Quem está `left` ou `removed` não volta. A capacidade não estoura.
+
+Sair da comunidade ou ser removido tira o acesso e impede nova confirmação. Convite interno e link também recusam o encontro comunitário; os do encontro privado continuam. Nos encontros futuros ainda `scheduled`, a participação vira `left` na saída voluntária e `removed` na remoção, liberando a vaga. Encontro que já começou conserva a presença confirmada, a escalação, o resultado e a contribuição estatística. Quem organiza um encontro futuro precisa cancelá-lo antes de sair ou ser removido. Não há transferência de organização.
+
+O organizador edita o próprio encontro, e a modalidade estrutural precisa continuar na comunidade. Proprietário e administrador da mesma comunidade cancelam encontro de outro integrante. Integrante comum não cancela encontro alheio. Administrador de outra comunidade não cancela. Encontro privado não entra nessa moderação. O cancelamento grava `meetup_audit_logs` com o autor e segue anulando partida que ainda não foi confirmada. Partida confirmada permanece.
+
+As partidas continuam em `matches`. A estatística continua uma contribuição por jogador e partida confirmada. Não há tabela paralela nem ranking comunitário.
+
+## Exclusão de conta
+
+A decisão está na [ADR-029](./DECISIONS.md). Apagar `auth.users` ou `profiles` é a mesma verificação: o gatilho corre antes da chave estrangeira.
+
+A exclusão é recusada, com o motivo na mensagem, quando a conta:
+
+- é proprietária de comunidade
+- organiza qualquer encontro
+- registrou moderação de encontro comunitário
+- está na escalação de partida `pending_confirmation`, `disputed` ou `confirmed`
+- tem contribuição em `match_player_statistics`
+- criou partida, registrou resultado ou consta em `match_audit_logs`
+
+Nesses casos o encontro, a comunidade, a escalação, o resultado e a contribuição de outras pessoas permanecem. A conta sem nenhum desses vínculos pode ser excluída. Amizade, participação na comunidade e vaga num encontro de outra pessoa saem com ela. Jogador que só aparece num rascunho sai daquela escalação; a partida rascunho das outras pessoas permanece.
+
+Remover um integrante da comunidade não é exclusão de conta. Vaga de encontro futuro agendado é liberada. Partida confirmada, escalação e contribuição ficam.
+
+Isto não encerra a conta de quem tem histórico. Falta transferir propriedade e organização, e falta um participante histórico sem e-mail, username nem preferências, com prazo de retenção. O dado pessoal não fica guardado como solução definitiva.
+
+## Chat da comunidade
+
+Implementado em `community_messages`. A decisão está na [ADR-030](./DECISIONS.md). Há um chat coletivo por comunidade. Não há chat do encontro, mensagem direta, anexo nem edição.
+
+A mensagem guarda autor, texto, encontro opcional da mesma comunidade, `client_request_id`, data e, se foi removida, `deleted_at` e `deleted_by`. O texto aceita quebra de linha, recusa outros controles e tem de 1 a 2000 caracteres úteis. Só espaços não entram. Com encontro, o texto pode ficar vazio. O cartão do encontro é lido na hora: título, modalidade, formato, horário, local, vagas e status. Cancelar o encontro muda o cartão. Não se copia esses campos na mensagem.
+
+Só integrante `active` lê e envia, na pública e na privada. Quem saiu, foi removido, só tem convite ou só é amigo fica de fora. Anônimo também. Autor apaga a própria mensagem. Proprietário e administrador da mesma comunidade apagam a de outro integrante. A exclusão lógica zera o texto, solta o encontro e não devolve o conteúdo pela API. A tela mostra "Mensagem removida".
+
+O histórico pagina por `(created_at, id)`, no máximo 50, da mais nova para a mais antiga, sem `offset`. Cada pessoa pode enviar 5 mensagens em 10 segundos na mesma comunidade. A trava é a linha de participação. Repetir o mesmo `client_request_id` devolve a mensagem já gravada; outro texto igual, com outro id, é outra mensagem.
+
+`author_id` usa `on delete cascade`. Conta sem histórico esportivo pode ser excluída e as mensagens dela saem junto. Mensagem não entra na recusa da [ADR-029](./DECISIONS.md). `deleted_by` usa `on delete set null`. Sair da comunidade não apaga o que a pessoa escreveu para quem ainda participa.
+
+A tela atualiza a cada 15 segundos com a aba visível, e também no botão Atualizar. Sair da conta limpa o cache. Perder a participação tira as mensagens da sessão. Realtime fica para depois.
 
 ## Partidas
 
@@ -179,13 +247,20 @@ Companheiro e adversário não têm tabela própria. A consulta cruza a contribu
 
 Desempenho por local não tem linha nesta fase. Uma correção administrativa futura de uma partida confirmada deve chamar de novo `private.project_match_statistics`: se o estado deixar de ser `confirmed`, as contribuições daquela partida somem. O reprocessamento completo também apaga contribuição cuja partida já não está `confirmed`.
 
-## Mensagens, enquetes e rankings
+## Enquetes da comunidade
 
-Conceitos reservados, sem tabela nesta etapa:
+Implementadas em `community_polls`, `community_poll_options` e `community_poll_votes`. A decisão está na [ADR-031](./DECISIONS.md) e o cálculo em [POLLS.md](./POLLS.md).
 
-- `Conversation` presa a um encontro ou a uma comunidade
-- `Message` nessa conversa
-- `Poll`, opções e votos no mesmo escopo
+Uma enquete tem uma comunidade, uma pergunta e de duas a dez opções. A categoria muda o que a opção aponta — texto, `sport_id`, instante com fuso, ou nome de local — e não muda o voto. O prazo é um instante. O estado efetivo nasce de `status` e de `closes_at`. Encerrada mostra o agregado. Cancelada não vale como decisão. Não há vencedora única em empate, nem quando ninguém votou. O percentual da opção usa as pessoas que votaram, e na múltipla escolha a soma pode passar de 100%.
+
+O voto é da pessoa autenticada. A função substitui a seleção inteira. Quem consulta vê o agregado e as próprias opções. Não vê o voto alheio. Sair da comunidade tira o acesso. Excluir a conta leva os votos e solta a autoria, sem apagar a enquete e sem nova trava sobre o histórico esportivo.
+
+## Mensagens e rankings
+
+O chat coletivo está em `community_messages`. Conceitos ainda sem tabela:
+
+- `Conversation` presa a um encontro
+- mensagem direta
 - ranking como ordenação de uma projeção num escopo (modalidade ou comunidade), com data de geração, nunca como pontuação digitada
 
 ## Relações

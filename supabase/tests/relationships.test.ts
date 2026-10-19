@@ -95,11 +95,15 @@ beforeAll(async () => {
 }, 30_000)
 
 afterAll(async () => {
-  await admin((client) =>
-    client.query(`delete from auth.users where email like $1`, [
-      `%${suffix}@padre.test`,
-    ]),
-  )
+  await admin(async (client) => {
+    const emails = [`%${suffix}@padre.test`]
+    await client.query(
+      `delete from public.meetups
+       where organizer_id in (select id from auth.users where email like $1)`,
+      emails,
+    )
+    await client.query(`delete from auth.users where email like $1`, emails)
+  })
 })
 
 describe('player relationships', () => {

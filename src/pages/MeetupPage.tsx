@@ -17,10 +17,12 @@ import { inviteShareUrl } from '@/domains/meetups/model/invite-link.ts'
 import { MeetupForm } from '@/domains/meetups/components/meetup-form.tsx'
 import {
   canChangeStructure,
+  meetupLoadError,
   messageFromMeetupError,
   type MeetupDraft,
   type MeetupFormValues,
 } from '@/domains/meetups/model/meetup.ts'
+import { useCommunity } from '@/domains/communities/api/queries.ts'
 import { wallClockInZone } from '@/domains/meetups/model/schedule.ts'
 import { MatchSection } from '@/domains/matches/components/match-section.tsx'
 import { MeetupPerformance } from '@/domains/statistics/components/meetup-performance.tsx'
@@ -43,7 +45,10 @@ export function MeetupPage() {
   const [linkNotice, setLinkNotice] = useState('')
   const [linkError, setLinkError] = useState('')
   const organizer =
-    Boolean(meetup.data?.isOrganizer) && meetup.data?.status === 'scheduled'
+    Boolean(meetup.data?.isOrganizer) &&
+    meetup.data?.status === 'scheduled' &&
+    !meetup.data.communitySlug
+  const origin = useCommunity(meetup.data?.communitySlug ?? '')
   const inviteLink = useMeetupInviteLink(id, organizer && !editing)
   const createLink = useCreateMeetupInviteLink(id ?? '')
   const revokeLink = useRevokeMeetupInviteLink(id ?? '')
@@ -111,7 +116,7 @@ export function MeetupPage() {
       ) : null}
       {meetup.isError ? (
         <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar o encontro.
+          {meetupLoadError(meetup.error)}
         </p>
       ) : null}
       {notice ? (
@@ -126,7 +131,15 @@ export function MeetupPage() {
       ) : null}
       {detail && editing && catalog.data && initial ? (
         <MeetupForm
-          sports={catalog.data}
+          sports={
+            detail.communitySlug
+              ? catalog.data.filter((sport) =>
+                  origin.data
+                    ? origin.data.sports.some((item) => item.id === sport.id)
+                    : sport.id === detail.sportId,
+                )
+              : catalog.data
+          }
           initial={initial}
           structureLocked={!canChangeStructure(detail.confirmedCount)}
           pending={pending}
@@ -174,6 +187,17 @@ export function MeetupPage() {
                         ? 'Presença confirmada.'
                         : 'Convite recusado.',
                     ),
+                  onError: (caught) => setError(messageFromMeetupError(caught)),
+                },
+              )
+            })
+          }
+          onJoin={() =>
+            run(() => {
+              command.mutate(
+                { type: 'join' },
+                {
+                  onSuccess: () => setNotice('Presença confirmada.'),
                   onError: (caught) => setError(messageFromMeetupError(caught)),
                 },
               )

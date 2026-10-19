@@ -58,4 +58,4 @@ Vôlei, vôlei de areia, futsal, beach tennis e futevôlei. A lista é dado de c
 
 ## O que este repositório ainda não é
 
-A aplicação já tem contas, perfil, amizades, o catálogo das cinco modalidades, encontros privados, link de convite, partidas com placar confirmado pelos dois lados, estatísticas individuais e as relações de companheiro e adversário calculadas dessas partidas. Não há comunidades, chat, desempenho por local nem ranking.
+A aplicação já tem contas, perfil, amizades, o catálogo das cinco modalidades, encontros privados, link de convite, partidas com placar confirmado pelos dois lados, estatísticas individuais, as relações de companheiro e adversário, comunidades públicas e privadas com proprietário, administrador, integrante, convite por username e encontros publicados para quem participa, o chat coletivo de cada comunidade, e enquetes com escolha única ou múltipla, prazo e resultado agregado. Não há Realtime, desempenho por local nem ranking.

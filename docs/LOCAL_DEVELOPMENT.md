@@ -105,6 +105,16 @@ A página `/amigos` pede amizade pelo username exato. Aceitar, recusar, cancelar
 
 A página `/encontros` lista os próximos, os que a pessoa organiza, os convites pendentes e os anteriores ou cancelados. Criar um encontro escolhe modalidade e formato no catálogo vivo, grava o horário em UTC no fuso informado e guarda a versão da regra daquele formato. Convidar um amigo exige amizade confirmada. O link em `/convite/:token` mostra um preview sem o endereço e, depois do login ou do cadastro, pede uma confirmação para ocupar a vaga. O retorno do cadastro fica na query `retorno` e só aceita esse caminho. Aceitar, recusar, sair, cancelar, gerar e revogar passam por funções no banco. O detalhe está nas ADR-022 e ADR-023.
 
+## Comunidades
+
+A página `/comunidades` lista as públicas e as da pessoa. Criar escolhe nome, descrição, visibilidade e ao menos uma modalidade do catálogo. A pública aceita entrada direta. A privada só abre depois do convite por username. Proprietário promove administrador. Administrador convida e remove integrante comum. O detalhe está na ADR-027.
+
+Na comunidade, a seção Enquetes aparece para quem participa. Dá para publicar, votar, trocar o voto, retirar, encerrar e cancelar. Modalidade usa o catálogo do grupo. Horário pode ser texto ou data com fuso de Brasília. Local é um nome manual. A lista sozinha atualiza a cada 15 segundos enquanto a aba está visível. Quem não participa não vê a enquete, nem numa comunidade pública. O detalhe está na ADR-031 e em [POLLS.md](./POLLS.md).
+
+Na comunidade, a seção Chat aparece para quem participa. Dá para escrever, enviar, atualizar, carregar mensagens anteriores, apagar a própria mensagem e compartilhar um encontro do grupo. Proprietário e administrador removem mensagem de outro integrante. A lista sozinha atualiza a cada 15 segundos enquanto a aba está visível. Quem não participa não vê o chat, nem numa comunidade pública. O detalhe está na ADR-030.
+
+Na comunidade, a seção Encontros mostra os próximos, os anteriores e os cancelados para quem participa. Propor encontro abre `/encontros/novo?comunidade=:slug`. O parâmetro só preenche o formulário; o banco confere de novo se a pessoa participa e se a modalidade está ligada ao grupo. Confirmar presença não pede amizade nem convite. Proprietário e administrador cancelam encontro de outro integrante. Sair da comunidade com encontro futuro sob a própria organização é recusado até o cancelamento. Apagar a conta é recusado quando a pessoa é proprietária, organiza encontro, está numa partida que já saiu do rascunho ou registrou resultado, moderação ou auditoria. A mensagem diz qual vínculo segurou a conta. Conta sem esses vínculos pode ser excluída. Não há transferência nem anonimização. O detalhe está nas ADR-028 e ADR-029.
+
 ## Partidas
 
 No detalhe do encontro, quem organiza cria a partida, nomeia os dois lados e escolhe confirmados. O mesmo jogador não entra nos dois lados. O formulário do placar muda com o tipo da regra gravada na partida. O envio para confirmação só fica disponível depois do início. Um jogador de cada lado confirma ou contesta. O histórico fica na própria partida. O detalhe está na ADR-024.

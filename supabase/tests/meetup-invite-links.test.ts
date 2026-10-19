@@ -49,9 +49,13 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await admin(async (client) => {
-    await client.query(`delete from auth.users where email like $1`, [
-      `%${suffix}@padre.test`,
-    ])
+    const emails = [`%${suffix}@padre.test`]
+    await client.query(
+      `delete from public.meetups
+       where organizer_id in (select id from auth.users where email like $1)`,
+      emails,
+    )
+    await client.query(`delete from auth.users where email like $1`, emails)
   })
 })
 

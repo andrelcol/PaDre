@@ -137,6 +137,16 @@ Os destaques percorrem todos os pares elegíveis, não a página da lista. A lis
 
 Uma migration com relógio real de 18 de outubro de 2026, por exemplo `20261018235959`, entra antes delas. A inspeção isolada, num banco descartável, mostrou essa ordem. Os arquivos aplicados não foram renomeados e o histórico do banco de desenvolvimento não foi reescrito. Migration nova precisa de versão maior que `20261018250000`. `supabase migration new` passou a gerar `20261019...`, que respeita essa ordem.
 
+## Exclusão de conta
+
+A contribuição confirmada não desaparece se alguém apaga o perfil. `match_player_statistics.user_id` é `on delete restrict`, e o gatilho em `profiles` recusa a exclusão de quem está na escalação de uma partida `pending_confirmation`, `disputed` ou `confirmed`. A exclusão também é recusada para quem criou a partida, gravou o resultado ou assinou a auditoria. O encontro de que a pessoa é organizadora não cai em cascata.
+
+A relação social junta as duas contribuições da mesma partida. Se a linha de um jogador sumisse, o companheiro ou adversário perderia esse confronto. A recusa impede essa mudança. Não há tabela de totais por dupla para corrigir à parte. Reprocessar uma partida confirmada, depois de uma exclusão recusada, regrava as mesmas linhas.
+
+Escalação que só existia em `draft` ainda sai com a conta. Isso não altera partida confirmada. Sair da comunidade ou ser removido também não apaga contribuição.
+
+A trava não é o encerramento da conta. Enquanto ela durar, o username permanece porque o fato ainda aponta para `profiles`. O passo seguinte é um participante histórico sem identificação, mais uma política de retenção, para a estatística de quem ficou continuar verdadeira sem guardar o dado pessoal. Até lá, a conta com histórico não é excluída. A decisão está na ADR-029.
+
 ## Limites desta fase
 
 Não há ranking, desempenho por local, estatística de dupla fixa nem filtro por período. A privacidade da relação ainda é a participação confirmada no encontro, sem configuração por pessoa. Pontos de tiebreak de games não são armazenados; apenas ficam de fora da contagem de games.

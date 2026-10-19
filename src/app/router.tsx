@@ -6,7 +6,10 @@ import {
   RequireAuth,
 } from '@/domains/identity/components/guards.tsx'
 import { CatalogPage } from '@/pages/CatalogPage.tsx'
+import { CommunitiesPage } from '@/pages/CommunitiesPage.tsx'
+import { CommunityPage } from '@/pages/CommunityPage.tsx'
 import { FriendsPage } from '@/pages/FriendsPage.tsx'
+import { NewCommunityPage } from '@/pages/NewCommunityPage.tsx'
 import { MeetupPage } from '@/pages/MeetupPage.tsx'
 import { MeetupsPage } from '@/pages/MeetupsPage.tsx'
 import { NewMeetupPage } from '@/pages/NewMeetupPage.tsx'
@@ -26,6 +29,16 @@ export const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/convite/:token', element: <InvitePage /> },
       { path: '/modalidades', element: <CatalogPage /> },
+      { path: '/comunidades', element: <CommunitiesPage /> },
+      {
+        path: '/comunidades/nova',
+        element: (
+          <RequireAuth>
+            <NewCommunityPage />
+          </RequireAuth>
+        ),
+      },
+      { path: '/comunidades/:slug', element: <CommunityPage /> },
       {
         path: '/encontros',
         element: (

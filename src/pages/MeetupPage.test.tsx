@@ -112,6 +112,9 @@ const detail: MeetupDetail = {
   },
   organizerUsername: 'ana',
   isOrganizer: false,
+  communitySlug: null,
+  communityName: null,
+  canModerate: false,
   myParticipation: null,
   participants: [{ username: 'ana' }],
   myInvitation: {

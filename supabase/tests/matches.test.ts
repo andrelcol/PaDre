@@ -42,11 +42,15 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await admin((client) =>
-    client.query(`delete from auth.users where email like $1`, [
-      `%${suffix}@padre.test`,
-    ]),
-  )
+  await admin(async (client) => {
+    const emails = [`%${suffix}@padre.test`]
+    await client.query(
+      `delete from public.meetups
+       where organizer_id in (select id from auth.users where email like $1)`,
+      emails,
+    )
+    await client.query(`delete from auth.users where email like $1`, emails)
+  })
 })
 
 describe('matches', () => {
@@ -520,7 +524,11 @@ describe('matches', () => {
       .map((row) => `${row.schema}.${row.name}`)
       .sort()
     expect(names).toEqual([
+      'private.get_community',
+      'private.list_public_communities',
       'private.preview_meetup_invite',
+      'public.get_community',
+      'public.list_public_communities',
       'public.preview_meetup_invite',
       'public.username_is_available',
     ])

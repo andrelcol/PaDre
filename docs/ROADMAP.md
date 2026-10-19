@@ -36,7 +36,7 @@ Fora ainda: PostGIS, mapa, visibilidade pública e estado `completed`. Partida e
 
 Entregue para encontros: link com token de 256 bits, só o hash no banco, expiração de no máximo sete dias, revogação e entrada de quem não é amigo. O cadastro volta ao convite e a vaga depende de uma confirmação explícita.
 
-Falta o convite de comunidade. Ele espera a Fase 8. Não há limite de usos separado da capacidade do encontro.
+O convite de comunidade por username entrou na Fase 8. Link compartilhável de comunidade continua fora. Não há limite de usos separado da capacidade do encontro.
 
 Fora: estatísticas.
 
@@ -58,21 +58,23 @@ Pronto quando: reprocessar do zero reproduz os mesmos números e nenhuma tela gr
 
 ## Fase 8 — Comunidades
 
-Objetivo: grupo, administradores, membros e encontro coletivo.
+Entregue: comunidade pública e privada, com nome, descrição, modalidades do catálogo e um proprietário. Integrante entra na pública, sai, e vê os outros integrantes. Proprietário promove e rebaixa administrador. Administrador convida pelo username e remove integrante comum. Comunidade privada fica fora da descoberta e só abre depois do convite aceito. Quem foi removido só volta com convite. Quem saiu pode entrar de novo na pública.
 
-Dependências: encontros. Convite de comunidade completa o que a Fase 5 deixou preparado.
+Entregue também: encontro dentro da comunidade, na mesma tabela `meetups`, com `community_id` opcional. Integrante ativo propõe, publica na hora e confirma presença sem amizade nem convite. Proprietário e administrador cancelam encontro de outro integrante da mesma comunidade. Sair ou ser removido libera vaga futura e preserva partida já confirmada. A exclusão do perfil do proprietário ou de quem organiza encontro comunitário é recusada, com a dependência explicada.
 
-Fora: ranking.
+Fora ainda: link de comunidade, convite de encontro comunitário, transferência de propriedade e ranking. O chat coletivo entrou na fase 9.
 
 Pronto quando: encontro sem comunidade continua válido e administrador não se confunde com amigo.
 
 ## Fase 9 — Chat e enquetes
 
-Objetivo: conversa e enquete no encontro ou na comunidade, com Realtime.
+Entregue: um chat coletivo por comunidade. Integrante ativo lê, envia texto, apaga a própria mensagem e compartilha encontro da mesma comunidade. Proprietário e administrador removem mensagem de outro integrante. A página atualiza a cada 15 segundos. Quem não participa não lê, nem na comunidade pública.
 
-Dependências: os escopos que ancoram a conversa.
+Entregue também: enquete da comunidade, com pergunta geral, modalidade do catálogo, horário e local manual. Escolha única e múltipla. Voto, troca e retirada enquanto estiver aberta. Encerramento manual ou pelo prazo, sem agendador. Proprietário, administrador e autor moderam. O resultado é agregado no Postgres. O voto individual não sai da função. A aba atualiza a cada 15 segundos.
 
-Pronto quando: quem não participa não lê as mensagens pelas políticas.
+Fora ainda: Realtime, chat do encontro, mensagem direta, anexo, reação, resposta encadeada, menção e encontro gerado por enquete.
+
+Pronto quando: quem não participa não lê mensagens nem enquetes pelas funções do banco.
 
 ## Fase 10 — Rankings e mapa
 

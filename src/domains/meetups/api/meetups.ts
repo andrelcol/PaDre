@@ -3,6 +3,7 @@ import {
   parseInviteLinkStatus,
   parseInvitePreview,
 } from '@/domains/meetups/model/invite-link.ts'
+import { parseCommunityMeetups } from '@/domains/meetups/model/community-meetup.ts'
 import {
   parseMeetupDetail,
   parseMeetupSummaries,
@@ -30,6 +31,44 @@ export async function getMeetup(meetupId: string) {
   })
   if (error) throw error
   return parseMeetupDetail(data)
+}
+
+export async function listCommunityMeetups(
+  slug: string,
+  limit: number,
+  offset: number,
+) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('list_community_meetups', {
+    community_slug: slug,
+    result_limit: limit,
+    result_offset: offset,
+  })
+  if (error) throw error
+  return parseCommunityMeetups(data)
+}
+
+export async function createCommunityMeetup(slug: string, draft: MeetupDraft) {
+  const supabase = requireSupabase()
+  const instants = meetupInstants(draft)
+  const { data, error } = await supabase.rpc('create_community_meetup', {
+    community_slug: slug,
+    ...writeArgs(draft, instants),
+  })
+  if (error) throw error
+  if (typeof data !== 'string') {
+    throw new Error('Não foi possível concluir. Tente de novo.')
+  }
+  return data
+}
+
+export async function joinCommunityMeetup(meetupId: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('join_community_meetup', {
+    meetup_id: meetupId,
+  })
+  if (error) throw error
+  return data
 }
 
 export async function createMeetup(draft: MeetupDraft) {

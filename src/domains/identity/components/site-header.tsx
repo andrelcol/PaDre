@@ -44,6 +44,9 @@ export function SiteHeader() {
           <Link to="/modalidades" className="text-sm text-muted-foreground">
             Modalidades
           </Link>
+          <Link to="/comunidades" className="text-sm text-muted-foreground">
+            Comunidades
+          </Link>
         </div>
         <nav aria-label="Conta" className="flex flex-wrap items-center gap-2">
           {loading ? (

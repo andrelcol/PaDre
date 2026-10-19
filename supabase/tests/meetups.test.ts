@@ -58,9 +58,13 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await admin(async (client) => {
-    await client.query(`delete from auth.users where email like $1`, [
-      `%${suffix}@padre.test`,
-    ])
+    const emails = [`%${suffix}@padre.test`]
+    await client.query(
+      `delete from public.meetups
+       where organizer_id in (select id from auth.users where email like $1)`,
+      emails,
+    )
+    await client.query(`delete from auth.users where email like $1`, emails)
   })
 })
 
@@ -566,6 +570,11 @@ describe('meetups', () => {
         '20261018240000_matches.sql',
         '20261018250000_statistics.sql',
         '20261019030042_player_relationships.sql',
+        '20261019032036_communities.sql',
+        '20261019092841_community_meetups.sql',
+        '20261019140000_historical_delete_guard.sql',
+        '20261019180000_community_messages.sql',
+        '20261019200000_community_polls.sql',
       ]) {
         await clean.query(
           readFileSync(
@@ -586,6 +595,14 @@ describe('meetups', () => {
         matches: 'matches',
         statistics: 'match_player_statistics',
       })
+      const communityMeetup = await clean.query(
+        `select column_name
+         from information_schema.columns
+         where table_schema = 'public'
+           and table_name = 'meetups'
+           and column_name = 'community_id'`,
+      )
+      expect(communityMeetup.rows).toHaveLength(1)
     } finally {
       await clean.end()
       await admin(async (client) => {

@@ -2,7 +2,7 @@
 
 Plataforma social para organizar encontros esportivos presenciais e acompanhar o que foi jogado.
 
-Esta etapa entrega conta, sessão, perfil, amizades, encontros, convite por link, partidas com placar confirmado, estatísticas individuais e relações de companheiro e adversário, em um Supabase local. Comunidades, chat, desempenho por local e ranking ainda não existem.
+Esta etapa entrega conta, sessão, perfil, amizades, encontros, convite por link, partidas com placar confirmado, estatísticas individuais, relações de companheiro e adversário, comunidades públicas e privadas com encontros para os integrantes, o chat coletivo de cada comunidade e enquetes para quem participa, em um Supabase local. Realtime, desempenho por local e ranking ainda não existem.
 
 ## Requisitos do produto
 
@@ -101,6 +101,7 @@ src/
   pages/               telas
   domains/identity/    conta, sessão e perfil
   domains/friendships/ pedido, aceite e lista de amigos
+  domains/communities/ comunidade, papéis, convite e modalidades
   domains/meetups/     encontro, presença, convite entre amigos e link
   domains/matches/     partida, lados, placar e confirmação
   domains/sports/      catálogo: modalidade, formato e regra versionada
@@ -118,5 +119,5 @@ Regra de negócio fica em `src/domains/<domínio>/model`. Acesso ao Supabase fic
 
 ## O que esta etapa não inclui
 
-- Comunidades, chat, mapa, desempenho por local ou ranking
+- Enquete, Realtime, mapa, desempenho por local ou ranking
 - Projeto Supabase remoto

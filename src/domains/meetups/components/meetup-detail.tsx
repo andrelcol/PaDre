@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 
 import {
   canChangeStructure,
@@ -29,6 +30,7 @@ type MeetupDetailViewProps = {
   onCancelInvitation: (invitationId: string) => void
   onRespond: (invitationId: string, action: 'accept' | 'decline') => void
   onLeave: () => void
+  onJoin: () => void
   onCancelMeetup: () => void
   onEdit: () => void
 }
@@ -41,6 +43,7 @@ export function MeetupDetailView({
   onCancelInvitation,
   onRespond,
   onLeave,
+  onJoin,
   onCancelMeetup,
   onEdit,
 }: MeetupDetailViewProps) {
@@ -69,7 +72,28 @@ export function MeetupDetailView({
         <h1 className="text-3xl font-semibold tracking-tight">
           {meetup.title}
         </h1>
+        {meetup.communitySlug && meetup.communityName ? (
+          <p className="text-sm">
+            Comunidade:{' '}
+            <Link
+              to={`/comunidades/${meetup.communitySlug}`}
+              className="font-medium underline"
+            >
+              {meetup.communityName}
+            </Link>
+          </p>
+        ) : null}
         {meetup.description ? <p>{meetup.description}</p> : null}
+        {meetup.myParticipation === 'confirmed' ? (
+          <p className="text-sm text-muted-foreground">
+            Sua presença está confirmada.
+          </p>
+        ) : null}
+        {meetup.status === 'cancelled' ? (
+          <p className="text-sm text-muted-foreground">
+            Este encontro foi cancelado.
+          </p>
+        ) : null}
       </header>
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <div>
@@ -130,7 +154,9 @@ export function MeetupDetailView({
         </ul>
       </section>
 
-      {meetup.isOrganizer && meetup.status === 'scheduled' ? (
+      {meetup.isOrganizer &&
+      !meetup.communitySlug &&
+      meetup.status === 'scheduled' ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold">Convidar amigo</h2>
           {friends.length === 0 ? (
@@ -196,6 +222,11 @@ export function MeetupDetailView({
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {meetup.isOrganizer && meetup.status === 'scheduled' ? (
+        <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" disabled={pending} onClick={onEdit}>
               Editar encontro
@@ -216,7 +247,33 @@ export function MeetupDetailView({
               travados.
             </p>
           )}
-        </section>
+        </div>
+      ) : null}
+
+      {meetup.canModerate &&
+      !meetup.isOrganizer &&
+      meetup.status === 'scheduled' ? (
+        <Button
+          variant="secondary"
+          disabled={pending}
+          onClick={() => confirm('cancel-meetup', onCancelMeetup)}
+        >
+          {confirming === 'cancel-meetup'
+            ? 'Confirmar cancelamento'
+            : 'Cancelar encontro'}
+        </Button>
+      ) : null}
+
+      {meetup.communitySlug &&
+      meetup.myParticipation === null &&
+      meetup.status === 'scheduled' ? (
+        meetup.openSpots === 0 ? (
+          <p className="text-sm text-muted-foreground">Encontro lotado.</p>
+        ) : (
+          <Button disabled={pending} onClick={onJoin}>
+            Confirmar presença
+          </Button>
+        )
       ) : null}
 
       {meetup.myInvitation?.status === 'pending' &&

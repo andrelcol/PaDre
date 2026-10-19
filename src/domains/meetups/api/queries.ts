@@ -3,7 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   cancelMeetup,
   cancelMeetupInvitation,
+  createCommunityMeetup,
   createMeetup,
+  joinCommunityMeetup,
+  listCommunityMeetups,
   createMeetupInviteLink,
   getMeetup,
   getMeetupInviteLink,
@@ -35,12 +38,37 @@ export function useMeetup(meetupId: string | undefined) {
   })
 }
 
+export function useCommunityMeetups(
+  slug: string,
+  enabled: boolean,
+  limit = 20,
+) {
+  return useQuery({
+    queryKey: ['communities', 'meetups', slug, limit],
+    queryFn: () => listCommunityMeetups(slug, limit, 0),
+    enabled: enabled && slug.length > 0,
+  })
+}
+
 export function useCreateMeetup() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (draft: MeetupDraft) => createMeetup(draft),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['meetups'] })
+    },
+  })
+}
+
+export function useCreateCommunityMeetup(slug: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (draft: MeetupDraft) => createCommunityMeetup(slug, draft),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['meetups'] })
+      await queryClient.invalidateQueries({
+        queryKey: ['communities', 'meetups', slug],
+      })
     },
   })
 }
@@ -62,6 +90,7 @@ export function useMeetupCommand(meetupId: string | undefined) {
       command:
         | { type: 'cancel' }
         | { type: 'leave' }
+        | { type: 'join' }
         | { type: 'invite'; username: string }
         | { type: 'cancel-invitation'; invitationId: string }
         | {
@@ -73,6 +102,7 @@ export function useMeetupCommand(meetupId: string | undefined) {
       if (!meetupId) throw new Error('Encontro ausente.')
       if (command.type === 'cancel') return cancelMeetup(meetupId)
       if (command.type === 'leave') return leaveMeetup(meetupId)
+      if (command.type === 'join') return joinCommunityMeetup(meetupId)
       if (command.type === 'invite')
         return inviteToMeetup(meetupId, command.username)
       if (command.type === 'cancel-invitation') {
@@ -82,6 +112,9 @@ export function useMeetupCommand(meetupId: string | undefined) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['meetups'] })
+      await queryClient.invalidateQueries({
+        queryKey: ['communities', 'meetups'],
+      })
     },
   })
 }

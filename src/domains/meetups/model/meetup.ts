@@ -241,6 +241,9 @@ const detailSchema = z.object({
   rule: scoringRuleSchema,
   organizer_username: z.string(),
   is_organizer: z.boolean(),
+  community_slug: z.string().nullable(),
+  community_name: z.string().nullable(),
+  can_moderate: z.boolean(),
   my_participation: z.enum(['confirmed', 'left', 'removed']).nullable(),
   participants: z.array(z.object({ username: z.string() })),
   my_invitation: z
@@ -279,6 +282,9 @@ export type MeetupDetail = {
   rule: z.infer<typeof scoringRuleSchema>
   organizerUsername: string
   isOrganizer: boolean
+  communitySlug: string | null
+  communityName: string | null
+  canModerate: boolean
   myParticipation: 'confirmed' | 'left' | 'removed' | null
   participants: { username: string }[]
   myInvitation: {
@@ -315,6 +321,9 @@ export function parseMeetupDetail(value: unknown): MeetupDetail {
     rule: row.rule,
     organizerUsername: row.organizer_username,
     isOrganizer: row.is_organizer,
+    communitySlug: row.community_slug,
+    communityName: row.community_name,
+    canModerate: row.can_moderate,
     myParticipation: row.my_participation,
     participants: row.participants,
     myInvitation: row.my_invitation,
@@ -363,6 +372,12 @@ export function meetupErrorMessage(error: { message?: string; code?: string }) {
   if (message.includes('sport format not found')) {
     return 'Escolha um formato ativo do catálogo.'
   }
+  if (message.includes('sport not in community')) {
+    return 'Essa modalidade não faz parte da comunidade.'
+  }
+  if (message.includes('community meetup has no invite')) {
+    return 'Encontro comunitário não usa convite. A presença é confirmada na comunidade.'
+  }
   if (message.includes('scoring rule does not match')) {
     return 'A regra de pontuação não pertence a esse formato.'
   }
@@ -379,6 +394,21 @@ export function meetupErrorMessage(error: { message?: string; code?: string }) {
     return 'Você não pode alterar esse encontro.'
   }
   return 'Não foi possível concluir. Tente de novo.'
+}
+
+export function meetupLoadError(error: unknown) {
+  const message =
+    error && typeof error === 'object' && 'message' in error
+      ? String(error.message).toLowerCase()
+      : ''
+  const code =
+    error && typeof error === 'object' && 'code' in error
+      ? String(error.code)
+      : ''
+  if (message.includes('not allowed') || code === '42501') {
+    return 'Você não pode ver este encontro.'
+  }
+  return 'Não foi possível carregar o encontro.'
 }
 
 export function messageFromMeetupError(error: unknown) {
