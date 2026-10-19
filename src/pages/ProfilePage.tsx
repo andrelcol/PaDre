@@ -1,6 +1,9 @@
 import { Link } from 'react-router'
 
 import { useOwnProfile } from '@/domains/identity/api/queries.ts'
+import { useMyStatistics } from '@/domains/statistics/api/queries.ts'
+import { PerformanceSection } from '@/domains/statistics/components/performance-section.tsx'
+import { RelationshipsSection } from '@/domains/statistics/components/relationships-section.tsx'
 import { useSession } from '@/domains/identity/components/session.tsx'
 import {
   formatProfileTimestamp,
@@ -19,6 +22,7 @@ export function ProfilePage() {
   const { session } = useSession()
   const userId = session?.user.id
   const profileQuery = useOwnProfile(userId)
+  const statistics = useMyStatistics(Boolean(userId))
 
   if (profileQuery.isLoading) {
     return (
@@ -78,6 +82,19 @@ export function ProfilePage() {
           </dl>
         </CardContent>
       </Card>
+      <PerformanceSection
+        title="Desempenho esportivo"
+        loading={statistics.isPending}
+        error={statistics.isError ? statistics.error : null}
+        sports={statistics.data?.sports}
+        empty="Você ainda não tem partidas confirmadas."
+        note="Calculado a partir das partidas confirmadas. O número não é editável."
+      />
+      <RelationshipsSection
+        loading={statistics.isPending}
+        error={statistics.isError ? statistics.error : null}
+        sports={statistics.data?.sports}
+      />
     </main>
   )
 }

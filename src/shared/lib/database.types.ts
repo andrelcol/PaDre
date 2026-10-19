@@ -157,6 +157,106 @@ export type Database = {
           },
         ]
       }
+      match_player_statistics: {
+        Row: {
+          created_at: string
+          deciding_points_against: number | null
+          deciding_points_for: number | null
+          games_lost: number | null
+          games_won: number | null
+          goals_against: number | null
+          goals_for: number | null
+          match_id: string
+          points_against: number | null
+          points_for: number | null
+          result: string
+          scoring_rule_version_id: string
+          sets_lost: number | null
+          sets_won: number | null
+          sport_format_id: string
+          sport_id: string
+          updated_at: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          deciding_points_against?: number | null
+          deciding_points_for?: number | null
+          games_lost?: number | null
+          games_won?: number | null
+          goals_against?: number | null
+          goals_for?: number | null
+          match_id: string
+          points_against?: number | null
+          points_for?: number | null
+          result: string
+          scoring_rule_version_id: string
+          sets_lost?: number | null
+          sets_won?: number | null
+          sport_format_id: string
+          sport_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deciding_points_against?: number | null
+          deciding_points_for?: number | null
+          games_lost?: number | null
+          games_won?: number | null
+          goals_against?: number | null
+          goals_for?: number | null
+          match_id?: string
+          points_against?: number | null
+          points_for?: number | null
+          result?: string
+          scoring_rule_version_id?: string
+          sets_lost?: number | null
+          sets_won?: number | null
+          sport_format_id?: string
+          sport_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'match_player_statistics_match_id_fkey'
+            columns: ['match_id']
+            isOneToOne: false
+            referencedRelation: 'matches'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'match_player_statistics_scoring_rule_version_id_fkey'
+            columns: ['scoring_rule_version_id']
+            isOneToOne: false
+            referencedRelation: 'scoring_rule_versions'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'match_player_statistics_sport_format_id_fkey'
+            columns: ['sport_format_id']
+            isOneToOne: false
+            referencedRelation: 'sport_formats'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'match_player_statistics_sport_id_fkey'
+            columns: ['sport_id']
+            isOneToOne: false
+            referencedRelation: 'sports'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'match_player_statistics_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       match_players: {
         Row: {
           match_id: string
@@ -808,6 +908,37 @@ export type Database = {
         }[]
       }
       meetup_invite_link: { Args: { meetup_id: string }; Returns: Json }
+      meetup_participant_statistics: {
+        Args: { meetup_id: string }
+        Returns: Json
+      }
+      meetup_player_relationships: {
+        Args: { meetup_id: string; player_id: string }
+        Returns: Json
+      }
+      my_opponent_statistics: {
+        Args: {
+          result_limit?: number
+          result_offset?: number
+          sport_format_id?: string
+          sport_id: string
+        }
+        Returns: Json
+      }
+      my_relationship_highlights: {
+        Args: { sport_format_id?: string; sport_id: string }
+        Returns: Json
+      }
+      my_statistics: { Args: Record<PropertyKey, never>; Returns: Json }
+      my_teammate_statistics: {
+        Args: {
+          result_limit?: number
+          result_offset?: number
+          sport_format_id?: string
+          sport_id: string
+        }
+        Returns: Json
+      }
       preview_meetup_invite: { Args: { token: string }; Returns: Json }
       request_friendship: {
         Args: { username: string }

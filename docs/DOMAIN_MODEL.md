@@ -159,20 +159,25 @@ A confirmação é uma linha por lado na revisão vigente, feita por um jogador 
 
 `match_audit_logs` registra criação, escalação, placar, envio, confirmação, contestação, revisão, confirmação definitiva e anulação. Cada linha tem partida, autor, ação, data e a revisão quando ela existe. Não há escrita direta do cliente.
 
-Somente `confirmed` com a revisão vigente poderá alimentar estatística. Esta etapa não grava projeção.
+Somente `confirmed` com a revisão vigente alimenta `match_player_statistics`. A decisão está na [ADR-025](./DECISIONS.md).
 
 Um tipo novo de pontuação entra assim: a função `private.scoring_config_is_valid` passa a aceitar as chaves; uma migration insere `scoring_rule_versions` nova, sem alterar as versões antigas; `resolveOutcome` e `private.resolve_match_outcome` ganham o ramo; o formulário da partida ganha o contrato desse tipo.
 
 ## Estatísticas
 
-Não há tabela de "vitórias do atleta" editável. Há projeção reconstruível, com uma escrita por partida, contendo pelo menos:
+Não há tabela de "vitórias do atleta" editável. `match_player_statistics` guarda a contribuição de uma partida confirmada para um jogador escalado. A chave é `(match_id, user_id)`. Quem só estava no encontro, sem escalação naquela partida, não recebe linha.
 
-- atleta, modalidade, partida, desfecho
-- par de confronto na mesma partida
-- par de companheiros no mesmo lado
-- atleta, local e partida, quando o encontro tem local
+Cada linha copia `sport_id`, `sport_format_id` e `scoring_rule_version_id` da versão gravada na partida, mais o desfecho `win`, `loss` ou `draw` do lado em que a pessoa jogou. Empate dá `draw` aos dois lados. As métricas vêm em pares, nulos quando o tipo da regra não as produz:
 
-As consultas do produto agregam essas linhas. Reprocessar apaga e recria o recorte a partir dos resultados confirmados, com o mesmo código da escrita incremental.
+- `set_based`: pontos e sets
+- `goal_based`: gols
+- `game_based`: sets, games e, em separado, pontos do super tiebreak
+
+O tiebreak de games não vira game. A consulta soma essas linhas por modalidade e por formato. A taxa de vitória é `vitórias / partidas * 100`, com uma casa, só na leitura. Empate entra no denominador e não conta como vitória. Sem partida, a pessoa não aparece na lista daquela modalidade.
+
+Companheiro e adversário não têm tabela própria. A consulta cruza a contribuição com o lado gravado em `match_teams` e `match_players`. O mesmo par pode acumular as duas relações em partidas diferentes. O detalhe, a amostragem mínima de cinco partidas e os desempates estão em [STATISTICS.md](./STATISTICS.md).
+
+Desempenho por local não tem linha nesta fase. Uma correção administrativa futura de uma partida confirmada deve chamar de novo `private.project_match_statistics`: se o estado deixar de ser `confirmed`, as contribuições daquela partida somem. O reprocessamento completo também apaga contribuição cuja partida já não está `confirmed`.
 
 ## Mensagens, enquetes e rankings
 
@@ -206,4 +211,6 @@ erDiagram
   MatchSide ||--o{ MatchParticipant : "fields"
   Profile ||--o{ MatchParticipant : "plays"
   Match ||--o{ MatchResult : "records"
+  Match ||--o{ MatchPlayerStatistic : "projects"
+  Profile ||--o{ MatchPlayerStatistic : "accumulates"
 ```

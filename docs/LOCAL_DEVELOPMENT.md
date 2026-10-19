@@ -109,6 +109,20 @@ A página `/encontros` lista os próximos, os que a pessoa organiza, os convites
 
 No detalhe do encontro, quem organiza cria a partida, nomeia os dois lados e escolhe confirmados. O mesmo jogador não entra nos dois lados. O formulário do placar muda com o tipo da regra gravada na partida. O envio para confirmação só fica disponível depois do início. Um jogador de cada lado confirma ou contesta. O histórico fica na própria partida. O detalhe está na ADR-024.
 
+## Estatísticas
+
+O perfil mostra o desempenho calculado das partidas confirmadas. No encontro, quem está confirmado vê o mesmo resumo dos outros confirmados, só com o username. A confirmação da partida já grava as contribuições. Para reconstruir em desenvolvimento, conectado como `postgres`:
+
+```sql
+select private.project_match_statistics('<match_id>');
+select private.reproject_user_statistics('<user_id>');
+select private.reproject_all_statistics();
+```
+
+O cliente não executa essas três funções. O cálculo está em [STATISTICS.md](./STATISTICS.md) e na ADR-025.
+
+No perfil, a seção "Companheiros e adversários" escolhe modalidade e, se quiser, formato. No encontro, quem está confirmado vê só as relações entre os confirmados. A decisão está na ADR-026.
+
 ## Catálogo
 
 Modalidades, formatos e regras ativas podem ser lidos com a chave anônima em `/rest/v1/sports`. Não há escrita pelo cliente. Uma modalidade nova entra numa migration posterior, com UUID fixo. A versão de uma regra não se altera: a migration desativa a versão corrente e insere a seguinte. O procedimento está na ADR-019 e no modelo de domínio.

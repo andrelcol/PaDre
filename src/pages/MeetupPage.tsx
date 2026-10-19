@@ -23,6 +23,8 @@ import {
 } from '@/domains/meetups/model/meetup.ts'
 import { wallClockInZone } from '@/domains/meetups/model/schedule.ts'
 import { MatchSection } from '@/domains/matches/components/match-section.tsx'
+import { MeetupPerformance } from '@/domains/statistics/components/meetup-performance.tsx'
+import { MeetupRelationships } from '@/domains/statistics/components/meetup-relationships.tsx'
 import { useCatalog } from '@/domains/sports/api/queries.ts'
 
 export function MeetupPage() {
@@ -220,6 +222,14 @@ export function MeetupPage() {
               ?.playersPerSideMax ?? null
           }
         />
+      ) : null}
+      {detail &&
+      !editing &&
+      (detail.isOrganizer || detail.myParticipation === 'confirmed') ? (
+        <>
+          <MeetupPerformance meetupId={detail.id} />
+          <MeetupRelationships meetupId={detail.id} />
+        </>
       ) : null}
       {detail && !editing && organizer ? (
         <MeetupInviteLinkPanel

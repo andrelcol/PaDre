@@ -52,6 +52,21 @@ vi.mock('@/domains/friendships/api/friendships.ts', () => ({
 
 vi.mock('@/domains/sports/api/catalog.ts', () => ({ getCatalog }))
 
+vi.mock('@/domains/statistics/api/statistics.ts', () => ({
+  getMyStatistics: vi.fn(async () => ({ sports: [] })),
+  getMeetupStatistics: vi.fn(async () => ({ participants: [] })),
+  getMyTeammates: vi.fn(),
+  getMyOpponents: vi.fn(),
+  getMyRelationshipHighlights: vi.fn(),
+  getMeetupRelationships: vi.fn(async () => ({
+    player: {
+      user_id: 'a1000000-0000-4000-8000-000000000099',
+      username: 'ana',
+    },
+    sports: [],
+  })),
+}))
+
 vi.mock('@/domains/matches/api/matches.ts', () => ({
   listMeetupMatches: vi.fn(async () => ({ roster: [], matches: [] })),
   createMatch: vi.fn(),

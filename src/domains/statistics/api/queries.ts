@@ -1,0 +1,72 @@
+import { useQuery } from '@tanstack/react-query'
+
+import {
+  getMeetupRelationships,
+  getMeetupStatistics,
+  getMyOpponents,
+  getMyRelationshipHighlights,
+  getMyStatistics,
+  getMyTeammates,
+} from '@/domains/statistics/api/statistics.ts'
+
+export function useMyStatistics(enabled: boolean) {
+  return useQuery({
+    queryKey: ['statistics', 'me'],
+    queryFn: getMyStatistics,
+    enabled,
+  })
+}
+
+export function useMeetupStatistics(meetupId: string | undefined) {
+  return useQuery({
+    queryKey: ['statistics', 'meetup', meetupId],
+    queryFn: () => getMeetupStatistics(meetupId ?? ''),
+    enabled: Boolean(meetupId),
+  })
+}
+
+export function useMyTeammates(
+  sportId: string | undefined,
+  sportFormatId: string | null,
+  offset: number,
+) {
+  return useQuery({
+    queryKey: ['statistics', 'teammates', sportId, sportFormatId, offset],
+    queryFn: () => getMyTeammates(sportId ?? '', sportFormatId, offset),
+    enabled: Boolean(sportId),
+  })
+}
+
+export function useMyOpponents(
+  sportId: string | undefined,
+  sportFormatId: string | null,
+  offset: number,
+) {
+  return useQuery({
+    queryKey: ['statistics', 'opponents', sportId, sportFormatId, offset],
+    queryFn: () => getMyOpponents(sportId ?? '', sportFormatId, offset),
+    enabled: Boolean(sportId),
+  })
+}
+
+export function useMyRelationshipHighlights(
+  sportId: string | undefined,
+  sportFormatId: string | null,
+) {
+  return useQuery({
+    queryKey: ['statistics', 'highlights', sportId, sportFormatId],
+    queryFn: () => getMyRelationshipHighlights(sportId ?? '', sportFormatId),
+    enabled: Boolean(sportId),
+  })
+}
+
+export function useMeetupRelationships(
+  meetupId: string | undefined,
+  playerId: string | undefined,
+) {
+  return useQuery({
+    queryKey: ['statistics', 'meetup', meetupId, 'relationships', playerId],
+    queryFn: () => getMeetupRelationships(meetupId ?? '', playerId ?? ''),
+    enabled: Boolean(meetupId && playerId),
+  })
+}

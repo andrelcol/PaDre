@@ -17,7 +17,7 @@ test.describe('account', () => {
       page.getByRole('heading', { name: 'Meu perfil' }),
     ).toBeVisible()
     await expect(page.getByText('Ana José')).toBeVisible()
-    await expect(page.getByText('Privado')).toBeVisible()
+    await expect(page.getByText('Privado', { exact: true })).toBeVisible()
 
     await page.reload()
     await expect(
@@ -34,7 +34,7 @@ test.describe('account', () => {
       page.getByRole('heading', { name: 'Meu perfil' }),
     ).toBeVisible()
     await expect(page.getByText('Ana Souza')).toBeVisible()
-    await expect(page.getByText('Público')).toBeVisible()
+    await expect(page.getByText('Público', { exact: true })).toBeVisible()
     await expect(page.getByText('America/Manaus')).toBeVisible()
 
     await page.getByRole('button', { name: 'Sair' }).click()

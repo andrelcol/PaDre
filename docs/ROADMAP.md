@@ -44,15 +44,17 @@ Fora: estatísticas.
 
 Entregue: várias partidas por encontro, dois lados com nome livre, escalação entre confirmados, placar validado pela versão da regra gravada na partida, desfecho calculado no banco, confirmação de um jogador de cada lado, contestação, revisão que invalida confirmações anteriores e histórico de ações. Cancelar o encontro anula rascunho, pendente e contestada. Partida confirmada permanece.
 
-Fora: projeção agregada, sorteio de equipes e chat.
+Ficou para a fase seguinte: a projeção individual. Fora: sorteio de equipes e chat.
 
 ## Fase 7 — Estatísticas
 
-Objetivo: projeção idempotente e as quatro consultas (individual, confronto, companheiros, local), por modalidade.
+Entregue: uma contribuição por jogador escalado em cada partida confirmada, gerada na mesma transação da confirmação. A leitura individual agrupa por modalidade e por formato, sem misturar pontos, gols e games. Reprocessar uma partida, uma pessoa ou o histórico inteiro usa a mesma função e não duplica linhas. O perfil mostra o próprio desempenho. Confirmados do mesmo encontro veem só o desempenho esportivo uns dos outros.
 
-Dependências: partidas confirmadas.
+Entregue também: companheiros, adversários e confronto direto calculados dessas contribuições, por modalidade e formato. Melhor companheiro e adversário mais difícil exigem cinco partidas. O reprocessamento completo remove contribuição de partida que deixou de estar confirmada.
 
-Pronto quando: reprocessar do zero reproduz os mesmos números e nenhuma tela grava contador próprio.
+Ainda fora: desempenho por local e ranking.
+
+Pronto quando: reprocessar do zero reproduz os mesmos números e nenhuma tela grava contador próprio. Esse critério vale para a leitura individual e para as relações. O desempenho por local continua pendente.
 
 ## Fase 8 — Comunidades
 

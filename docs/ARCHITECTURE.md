@@ -99,24 +99,21 @@ Toda tabela exposta ao cliente terá política. O desenho, ainda sem SQL:
 | Catálogo esportivo      | Anônimo e autenticado, só linhas ativas           | Ninguém no cliente. Só migration                                           |
 | Convite por link        | Preview estreito, sem a tabela                    | Organização gera e revoga. Entrada por função                              |
 | Partida e resultado     | Quem vê o encontro, pela função de lista          | Organização cria e revisa. Cada lado confirma o próprio                    |
-| Projeção de estatística | Conforme a privacidade de quem é medido           | Nenhum cliente. Só a função de projeção                                    |
+| Projeção de estatística | A própria pessoa; confirmados do mesmo encontro   | Nenhum cliente. Só `private.project_match_statistics`                      |
 
 Esconder botão não é permissão. Funções `security definer`, quando existirem, checam o mesmo critério e não recebem a chave de serviço no browser.
 
 ## Estatísticas
 
-Estados que contam: partida `confirmed` com a revisão vigente do resultado. Rascunho, pendente, contestada e anulada ficam de fora. A projeção ainda não existe.
+Estados que contam: partida `confirmed` com a revisão vigente do resultado. Rascunho, pendente, contestada e anulada ficam de fora. O cálculo está em [STATISTICS.md](./STATISTICS.md).
 
-`resolveOutcome`, no cliente, e `private.resolve_match_outcome`, no banco, interpretam o placar da versão gravada na partida e devolvem lado vencedor ou empate. A gravação persiste esse desfecho. O cliente não escolhe o vencedor. A projeção, quando existir, agrega só esses desfechos.
+`resolveOutcome`, no cliente, e `private.resolve_match_outcome`, no banco, interpretam o placar da versão gravada na partida e devolvem lado vencedor ou empate. A gravação persiste esse desfecho. O cliente não escolhe o vencedor.
 
-A única escritora das projeções é uma função idempotente por partida: apaga as linhas daquela partida e as reinsere a partir do resultado vigente. Reprocessar é chamá-la para cada partida confirmada. Gatilho, job e correção usam o mesmo caminho. Não existe contador de vitórias atualizado por fora.
+`match_player_statistics` guarda uma contribuição por jogador escalado e por partida. A chave primária é `(match_id, user_id)`. A modalidade e o formato vêm da versão da regra gravada na partida, não do formato atual do encontro. Métrica que o tipo da regra não produz fica nula. Pontos de vôlei, gols de futsal e games de beach tennis não se somam. O tiebreak não entra em games. O super tiebreak fica em `deciding_points_for` e `deciding_points_against`.
 
-As quatro leituras do produto saem dessa projeção, sempre filtradas por modalidade:
+`private.confirm_match` chama `private.project_match_statistics` na mesma transação, depois de gravar `confirmed`. Se a projeção falhar, a confirmação volta atrás. A função trava a partida, substitui as linhas daquela partida e apaga quem saiu da escalação. Partida que não está `confirmed` perde as contribuições. Reprocessar uma pessoa ou o histórico inteiro chama a mesma função, só como `postgres`. Não há tabela agregada: `my_statistics` e `meetup_participant_statistics` somam as contribuições.
 
-- individual
-- confronto direto
-- companheiros de lado
-- local do encontro
+A leitura individual agrupa por modalidade e, dentro dela, por formato. Companheiro e adversário saem da mesma contribuição, cruzada com o lado em `match_teams`. Não há tabela de dupla. O destaque de melhor companheiro e de adversário mais difícil exige cinco partidas na modalidade escolhida. O local do encontro continua fora. O cálculo está em [STATISTICS.md](./STATISTICS.md).
 
 ## Tempo
 
@@ -144,4 +141,4 @@ TypeScript `strict`. ESLint e Prettier no código. Vitest e Testing Library nas 
 
 ## Fora desta etapa
 
-Comunidade, chat, estatística e mapa continuam de fora. A identidade local — conta, sessão e perfil — está descrita em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
+Comunidade, chat, mapa, desempenho por local e ranking continuam de fora. A identidade local — conta, sessão e perfil — está descrita em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).

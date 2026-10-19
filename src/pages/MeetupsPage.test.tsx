@@ -86,7 +86,9 @@ describe('MeetupsPage', () => {
     expect(
       await screen.findByRole('heading', { name: 'Meus próximos encontros' }),
     ).toBeVisible()
-    expect(screen.getAllByRole('link', { name: /Vôlei na quadra/ })).toHaveLength(2)
+    expect(
+      screen.getAllByRole('link', { name: /Vôlei na quadra/ }),
+    ).toHaveLength(2)
     expect(screen.getByRole('link', { name: /Convite da Ana/ })).toBeVisible()
     expect(screen.getAllByText(/1 vaga disponível/).length).toBeGreaterThan(0)
     expect(
