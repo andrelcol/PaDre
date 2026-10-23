@@ -37,7 +37,8 @@ Não há, nesta visão, perfil de clube profissional, bilheteria ou transmissão
 - Partidas registradas durante o encontro.
 - Estatísticas individuais, confrontos diretos, desempenho com companheiros e desempenho por local.
 - Comunidades com integrantes, administradores e encontros coletivos.
-- Chats, enquetes, rankings e mapa interativo.
+- Chats, enquetes, mapa interativo e cartinhas definidas pela comunidade.
+- Rankings ainda não existem.
 
 ### Depois
 
@@ -58,4 +59,4 @@ Vôlei, vôlei de areia, futsal, beach tennis e futevôlei. A lista é dado de c
 
 ## O que este repositório ainda não é
 
-A aplicação já tem contas, perfil, amizades, o catálogo das cinco modalidades, encontros privados, link de convite, partidas com placar confirmado pelos dois lados, estatísticas individuais, as relações de companheiro e adversário, comunidades públicas e privadas com proprietário, administrador, integrante, convite por username e encontros publicados para quem participa, o chat coletivo de cada comunidade, e enquetes com escolha única ou múltipla, prazo e resultado agregado. Não há Realtime, desempenho por local nem ranking.
+A aplicação já tem contas, perfil com altura e sexo opcionais, amizades, o catálogo das cinco modalidades, encontros privados, link de convite, partidas com placar confirmado pelos dois lados, estatísticas individuais, as relações de companheiro e adversário, desempenho por local, comunidades públicas e privadas com proprietário, administrador, integrante, convite por username e encontros publicados para quem participa, o chat coletivo de cada comunidade, enquetes com escolha única ou múltipla, prazo e resultado agregado, locais pessoais ou da comunidade reutilizados no encontro, o mapa dos pontos que a pessoa autorizada marcou, e cartinhas com atributos definidos pela comunidade. A foto de perfil ainda não persiste, porque o ambiente local não tem Storage. Não há Realtime nem ranking.

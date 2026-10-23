@@ -9,6 +9,7 @@ import {
   useMeetupCommand,
   useMeetupInviteLink,
   useRevokeMeetupInviteLink,
+  useSetMeetupPlace,
   useUpdateMeetup,
 } from '@/domains/meetups/api/queries.ts'
 import { MeetupDetailView } from '@/domains/meetups/components/meetup-detail.tsx'
@@ -18,6 +19,7 @@ import { MeetupForm } from '@/domains/meetups/components/meetup-form.tsx'
 import {
   canChangeStructure,
   meetupLoadError,
+  meetupPlaceChanged,
   messageFromMeetupError,
   type MeetupDraft,
   type MeetupFormValues,
@@ -25,9 +27,14 @@ import {
 import { useCommunity } from '@/domains/communities/api/queries.ts'
 import { wallClockInZone } from '@/domains/meetups/model/schedule.ts'
 import { MatchSection } from '@/domains/matches/components/match-section.tsx'
+import { readPublicWebOrigin } from '@/shared/lib/env.ts'
 import { MeetupPerformance } from '@/domains/statistics/components/meetup-performance.tsx'
 import { MeetupRelationships } from '@/domains/statistics/components/meetup-relationships.tsx'
 import { useCatalog } from '@/domains/sports/api/queries.ts'
+import {
+  useCommunityVenues,
+  useMyVenues,
+} from '@/domains/venues/api/queries.ts'
 
 export function MeetupPage() {
   const { id } = useParams()
@@ -36,6 +43,14 @@ export function MeetupPage() {
   const catalog = useCatalog()
   const friends = useFriendships(Boolean(session))
   const update = useUpdateMeetup(id ?? '')
+  const setPlace = useSetMeetupPlace(id ?? '')
+  const personalVenues = useMyVenues(
+    Boolean(meetup.data && !meetup.data.communitySlug),
+  )
+  const communityVenues = useCommunityVenues(
+    meetup.data?.communitySlug ?? '',
+    Boolean(meetup.data?.communitySlug),
+  )
   const command = useMeetupCommand(id)
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState('')
@@ -54,7 +69,19 @@ export function MeetupPage() {
   const revokeLink = useRevokeMeetupInviteLink(id ?? '')
 
   const detail = meetup.data
-  const pending = update.isPending || command.isPending
+  const pending = update.isPending || setPlace.isPending || command.isPending
+  const venueChoices = (
+    detail?.communitySlug ? communityVenues.data : personalVenues.data
+  )
+    ?.filter((venue) => venue.status === 'active')
+    .map((venue) => ({
+      id: venue.id,
+      name: venue.name,
+      address: venue.address,
+      details: venue.details,
+      latitude: venue.latitude,
+      longitude: venue.longitude,
+    }))
 
   function run(task: () => void) {
     setNotice('')
@@ -72,19 +99,27 @@ export function MeetupPage() {
       draft.endDate === end.date &&
       draft.endTime === end.time &&
       draft.timeZone === detail.timeZone
+    const payload = sameSchedule
+      ? { ...draft, startsAt: detail.startsAt, endsAt: detail.endsAt }
+      : draft
     run(() => {
-      update.mutate(
-        sameSchedule
-          ? { ...draft, startsAt: detail.startsAt, endsAt: detail.endsAt }
-          : draft,
-        {
-          onSuccess: () => {
+      update.mutate(payload, {
+        onSuccess: () => {
+          if (!meetupPlaceChanged(detail, draft)) {
             setEditing(false)
             setNotice('Encontro atualizado.')
-          },
-          onError: (caught) => setError(messageFromMeetupError(caught)),
+            return
+          }
+          setPlace.mutate(draft, {
+            onSuccess: () => {
+              setEditing(false)
+              setNotice('Encontro atualizado.')
+            },
+            onError: (caught) => setError(messageFromMeetupError(caught)),
+          })
         },
-      )
+        onError: (caught) => setError(messageFromMeetupError(caught)),
+      })
     })
   }
 
@@ -94,8 +129,13 @@ export function MeetupPage() {
         sportFormatId: detail.sportFormatId,
         title: detail.title,
         description: detail.description,
+        placeMode: detail.venueId ? 'venue' : 'manual',
+        venueId: detail.venueId ?? '',
         locationName: detail.locationName,
         locationAddress: detail.locationAddress,
+        locationDetails: detail.locationDetails,
+        locationLatitude: detail.locationLatitude,
+        locationLongitude: detail.locationLongitude,
         timeZone: detail.timeZone,
         startDate: wallClockInZone(new Date(detail.startsAt), detail.timeZone)
           .date,
@@ -108,7 +148,7 @@ export function MeetupPage() {
     : null
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
       {meetup.isPending ? (
         <p role="status" className="text-sm text-muted-foreground">
           Carregando encontro
@@ -131,6 +171,7 @@ export function MeetupPage() {
       ) : null}
       {detail && editing && catalog.data && initial ? (
         <MeetupForm
+          venues={venueChoices ?? []}
           sports={
             detail.communitySlug
               ? catalog.data.filter((sport) =>
@@ -270,7 +311,7 @@ export function MeetupPage() {
             setLinkError('')
             createLink.mutate(undefined, {
               onSuccess: (issued) => {
-                const url = inviteShareUrl(window.location.origin, issued.token)
+                const url = inviteShareUrl(readPublicWebOrigin(), issued.token)
                 setShareUrl(url)
                 setShareExpiry(issued.expires_at)
                 setLinkNotice(

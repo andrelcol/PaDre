@@ -191,7 +191,15 @@ function FriendshipSection({
               key={item.id}
               className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
             >
-              <span className="font-medium">{item.otherUsername}</span>
+              <span className="flex items-center gap-3 font-medium">
+                <span
+                  aria-hidden="true"
+                  className="inline-flex size-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
+                >
+                  {item.otherUsername.slice(0, 1).toUpperCase()}
+                </span>
+                {item.otherUsername}
+              </span>
               <div className="flex flex-wrap gap-2">
                 {availableActions(item).map((action) => {
                   const armed =

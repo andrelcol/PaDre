@@ -39,18 +39,22 @@ test('community members chat, share a meetup and moderate', async ({
     await expect(pageB!.getByText('Você entrou na comunidade.')).toBeVisible()
 
     await sendChat(pageA!, 'Oi, Bia')
+    await openChat(pageB!)
     await pageB!.getByRole('button', { name: 'Atualizar' }).click()
     await expect(pageB!.getByText('Oi, Bia')).toBeVisible()
     await sendChat(pageB!, 'Oi, Ana')
+    await openChat(pageA!)
     await pageA!.getByRole('button', { name: 'Atualizar' }).click()
     await expect(pageA!.getByText('Oi, Ana')).toBeVisible()
 
     await propose(pageA!, publicPath, meetupTitle)
     await pageA!.goto(publicPath)
+    await openChat(pageA!)
     await pageA!
       .getByLabel('Encontro', { exact: true })
       .selectOption({ label: meetupTitle })
     await sendChat(pageA!, 'Vamos?')
+    await openChat(pageB!)
     await pageB!.getByRole('button', { name: 'Atualizar' }).click()
     const shared = pageB!.getByRole('link', {
       name: `Encontro compartilhado ${meetupTitle}`,
@@ -63,6 +67,7 @@ test('community members chat, share a meetup and moderate', async ({
       pageB!.getByText('Sua presença está confirmada.'),
     ).toBeVisible()
     await pageB!.goto(publicPath)
+    await openChat(pageB!)
     await pageB!.getByRole('button', { name: 'Atualizar' }).click()
     await expect(
       pageB!.getByRole('link', {
@@ -80,12 +85,14 @@ test('community members chat, share a meetup and moderate', async ({
     await pageC!.getByRole('button', { name: 'Entrar' }).click()
     await expect(pageC!.getByText('Você entrou na comunidade.')).toBeVisible()
     await sendChat(pageC!, 'Mensagem do Caio')
+    await openChat(pageB!)
     await pageB!.getByRole('button', { name: 'Atualizar' }).click()
     await pageB!
       .getByRole('article')
       .filter({ hasText: 'Mensagem do Caio' })
       .getByRole('button', { name: /Remover mensagem/ })
       .click()
+    await openChat(pageC!)
     await pageC!.getByRole('button', { name: 'Atualizar' }).click()
     await expect(pageC!.getByText('Mensagem removida')).toBeVisible()
     await expect(pageC!.getByText('Mensagem do Caio')).toHaveCount(0)
@@ -108,7 +115,15 @@ test('community members chat, share a meetup and moderate', async ({
   }
 })
 
+async function openChat(page: Page) {
+  const tab = page.getByRole('tab', { name: 'Chat' })
+  if ((await tab.getAttribute('aria-selected')) !== 'true') {
+    await tab.click()
+  }
+}
+
 async function sendChat(page: Page, text: string) {
+  await openChat(page)
   await page.getByRole('textbox', { name: 'Mensagem', exact: true }).fill(text)
   await page.getByRole('button', { name: 'Enviar' }).click()
   await expect(page.getByText(text)).toBeVisible()

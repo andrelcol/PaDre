@@ -4,8 +4,9 @@ import { cn } from '@/shared/lib/utils.ts'
 
 const variants = {
   primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-  secondary: 'border bg-background hover:bg-accent',
-  ghost: 'hover:bg-accent',
+  secondary:
+    'border bg-background hover:bg-accent hover:text-accent-foreground',
+  ghost: 'hover:bg-accent hover:text-accent-foreground',
 } as const
 
 type ButtonProps = ComponentProps<'button'> & {
@@ -19,7 +20,7 @@ export function buttonClassName(
   className?: string,
 ) {
   return cn(
-    'inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
     variants[variant],
     className,
   )

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { useParams, useSearchParams } from 'react-router'
 
 import {
   useCancelCommunityInvitation,
@@ -18,13 +18,16 @@ import {
   type CommunityDraft,
 } from '@/domains/communities/model/community.ts'
 import { useSession } from '@/domains/identity/components/session.tsx'
+import { CommunityCards } from '@/domains/cards/components/community-cards.tsx'
 import { CommunityChat } from '@/domains/chat/components/community-chat.tsx'
 import { CommunityPolls } from '@/domains/polls/components/community-polls.tsx'
+import { CommunityVenues } from '@/domains/venues/components/community-venues.tsx'
 import { useCommunityMeetups } from '@/domains/meetups/api/queries.ts'
 import { useCatalog } from '@/domains/sports/api/queries.ts'
 
 export function CommunityPage() {
   const { slug = '' } = useParams()
+  const [params] = useSearchParams()
   const { session, loading } = useSession()
   const community = useCommunity(slug)
   const catalog = useCatalog()
@@ -72,7 +75,7 @@ export function CommunityPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
       {community.isPending ? (
         <p role="status" className="text-sm text-muted-foreground">
           Carregando comunidade
@@ -95,6 +98,7 @@ export function CommunityPage() {
           </header>
           <CommunityDetailView
             community={community.data}
+            initialTab={params.get('mapa') ? 'locais' : undefined}
             sports={
               catalog.data?.map((sport) => ({
                 id: sport.id,
@@ -177,9 +181,31 @@ export function CommunityPage() {
             onMoreMeetups={() =>
               setMeetupLimit((current) => Math.min(current + 20, 50))
             }
+            venues={
+              community.data.myRole ? (
+                <CommunityVenues
+                  slug={slug}
+                  canManage={
+                    community.data.myRole === 'owner' ||
+                    community.data.myRole === 'admin'
+                  }
+                />
+              ) : null
+            }
             polls={
               community.data.myRole ? (
                 <CommunityPolls slug={slug} sports={community.data.sports} />
+              ) : null
+            }
+            cards={
+              community.data.myRole ? (
+                <CommunityCards
+                  slug={slug}
+                  canConfigure={
+                    community.data.myRole === 'owner' ||
+                    community.data.myRole === 'admin'
+                  }
+                />
               ) : null
             }
             chat={

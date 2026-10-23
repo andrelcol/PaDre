@@ -30,6 +30,10 @@ const migrationFiles = [
   '20261019140000_historical_delete_guard.sql',
   '20261019180000_community_messages.sql',
   '20261019200000_community_polls.sql',
+  '20261019220000_venues.sql',
+  '20261019230000_venue_locations.sql',
+  '20261019240000_venue_statistics.sql',
+  '20261019250000_profile_details_and_player_cards.sql',
 ]
 let nina: Account
 let owner: Account

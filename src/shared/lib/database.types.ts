@@ -1015,6 +1015,7 @@ export type Database = {
           ends_at: string
           id: string
           location_address: string | null
+          location_details: string | null
           location_name: string
           max_participants: number
           organizer_id: string
@@ -1025,6 +1026,7 @@ export type Database = {
           time_zone: string
           title: string
           updated_at: string
+          venue_id: string | null
         }
         ComputedFields: never
         Insert: {
@@ -1034,6 +1036,7 @@ export type Database = {
           ends_at: string
           id?: string
           location_address?: string | null
+          location_details?: string | null
           location_name: string
           max_participants: number
           organizer_id: string
@@ -1044,6 +1047,7 @@ export type Database = {
           time_zone: string
           title: string
           updated_at?: string
+          venue_id?: string | null
         }
         Update: {
           community_id?: string | null
@@ -1052,6 +1056,7 @@ export type Database = {
           ends_at?: string
           id?: string
           location_address?: string | null
+          location_details?: string | null
           location_name?: string
           max_participants?: number
           organizer_id?: string
@@ -1062,6 +1067,7 @@ export type Database = {
           time_zone?: string
           title?: string
           updated_at?: string
+          venue_id?: string | null
         }
         Relationships: [
           {
@@ -1090,6 +1096,13 @@ export type Database = {
             columns: ['sport_format_id']
             isOneToOne: false
             referencedRelation: 'sport_formats'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'meetups_venue_id_fkey'
+            columns: ['venue_id']
+            isOneToOne: false
+            referencedRelation: 'venues'
             referencedColumns: ['id']
           },
         ]
@@ -1276,11 +1289,70 @@ export type Database = {
         }
         Relationships: []
       }
+      venues: {
+        Row: {
+          address: string
+          community_id: string | null
+          created_at: string
+          created_by: string | null
+          details: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          status: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          address: string
+          community_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          community_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'venues_community_id_fkey'
+            columns: ['community_id']
+            isOneToOne: false
+            referencedRelation: 'communities'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'venues_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      archive_venue: { Args: { venue_id: string }; Returns: Json }
       cancel_community_invitation: {
         Args: { invitation_id: string }
         Returns: Json
@@ -1315,6 +1387,9 @@ export type Database = {
           starts_at: string
           time_zone: string
           title: string
+          venue_id?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
         }
         Returns: string
       }
@@ -1344,6 +1419,9 @@ export type Database = {
           starts_at: string
           time_zone: string
           title: string
+          venue_id?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
         }
         Returns: string
       }
@@ -1353,6 +1431,17 @@ export type Database = {
           expires_at: string
           token: string
         }[]
+      }
+      create_venue: {
+        Args: {
+          address: string
+          community_slug: string | null
+          details: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+        }
+        Returns: Json
       }
       delete_community_message: { Args: { message_id: string }; Returns: Json }
       dispute_match: { Args: { match_id: string }; Returns: string }
@@ -1403,6 +1492,7 @@ export type Database = {
         }
         Returns: Json
       }
+      list_community_venues: { Args: { slug: string }; Returns: Json }
       list_meetup_matches: { Args: { meetup_id: string }; Returns: Json }
       list_my_communities: { Args: Record<PropertyKey, never>; Returns: Json }
       list_my_community_invitations: {
@@ -1439,8 +1529,13 @@ export type Database = {
           title: string
         }[]
       }
+      list_my_venues: { Args: Record<PropertyKey, never>; Returns: Json }
       list_public_communities: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      list_venue_meetups: {
+        Args: { result_limit: number; result_offset: number; venue_id: string }
         Returns: Json
       }
       meetup_invite_link: { Args: { meetup_id: string }; Returns: Json }
@@ -1466,6 +1561,19 @@ export type Database = {
         Returns: Json
       }
       my_statistics: { Args: Record<PropertyKey, never>; Returns: Json }
+      my_venue_statistic: {
+        Args: {
+          sport_format_id?: string
+          sport_id?: string
+          venue_id: string
+        }
+        Returns: Json
+      }
+      my_venue_statistics: {
+        Args: { sport_format_id?: string; sport_id?: string }
+        Returns: Json
+      }
+      community_venue_usage: { Args: { slug: string }; Returns: Json }
       my_teammate_statistics: {
         Args: {
           result_limit?: number
@@ -1529,6 +1637,49 @@ export type Database = {
         Args: { slug: string; sport_ids: string[] }
         Returns: Json
       }
+      get_own_profile_details: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      update_profile_details: {
+        Args: {
+          height_cm?: number | null
+          sex?: string
+          show_avatar?: boolean
+          show_height?: boolean
+          show_sex?: boolean
+        }
+        Returns: Json
+      }
+      get_visible_profile_details: { Args: { username: string }; Returns: Json }
+      save_community_card_draft: {
+        Args: { attributes: Json; slug: string }
+        Returns: Json
+      }
+      publish_community_card_template: { Args: { slug: string }; Returns: Json }
+      get_community_card_template: { Args: { slug: string }; Returns: Json }
+      set_my_community_card_participation: {
+        Args: { active: boolean; slug: string }
+        Returns: Json
+      }
+      rate_community_player: {
+        Args: {
+          attribute_id: string
+          score: number
+          slug: string
+          username: string
+        }
+        Returns: Json
+      }
+      get_my_community_player_rating: {
+        Args: { slug: string; username: string }
+        Returns: Json
+      }
+      get_community_player_card: {
+        Args: { slug: string; username: string }
+        Returns: Json
+      }
+      list_community_player_cards: { Args: { slug: string }; Returns: Json }
       set_match_lineup: {
         Args: {
           match_id: string
@@ -1542,6 +1693,26 @@ export type Database = {
       set_match_result: {
         Args: { match_id: string; payload: Json }
         Returns: string
+      }
+      set_meetup_place: {
+        Args: {
+          location_address: string | null
+          location_details: string | null
+          location_name: string | null
+          meetup_id: string
+          venue_id: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
+        }
+        Returns: string
+      }
+      set_venue_location: {
+        Args: {
+          latitude: number
+          longitude: number
+          venue_id: string
+        }
+        Returns: Json
       }
       submit_match: { Args: { match_id: string }; Returns: string }
       update_community: {
@@ -1568,6 +1739,10 @@ export type Database = {
           title: string
         }
         Returns: string
+      }
+      update_venue: {
+        Args: { details: string | null; name: string; venue_id: string }
+        Returns: Json
       }
       username_is_available: { Args: { candidate: string }; Returns: boolean }
       void_match: { Args: { match_id: string }; Returns: string }

@@ -79,7 +79,14 @@ export function PollCard({
           {poll.options.map((option) => {
             const checked = selected.includes(option.id)
             return (
-              <label key={option.id} className="flex items-start gap-2 text-sm">
+              <label
+                key={option.id}
+                className={
+                  checked
+                    ? 'flex min-h-11 items-start gap-2 rounded-xl border border-primary bg-primary/10 px-3 py-2 text-sm'
+                    : 'flex min-h-11 items-start gap-2 rounded-xl border px-3 py-2 text-sm'
+                }
+              >
                 <input
                   className="mt-1"
                   type={poll.selectionMode === 'single' ? 'radio' : 'checkbox'}
@@ -121,6 +128,21 @@ export function PollCard({
         <ul className="flex flex-col gap-1">
           {poll.options.map((option) => (
             <li key={option.id} className="text-sm">
+              <span
+                className="mb-1 block h-2 overflow-hidden rounded-full bg-secondary"
+                aria-hidden="true"
+              >
+                <span
+                  className={
+                    option.leading && poll.effectiveStatus === 'closed'
+                      ? 'block h-full rounded-full bg-pitch'
+                      : 'block h-full rounded-full bg-primary'
+                  }
+                  style={{
+                    width: `${Math.min(100, Math.max(0, option.percent ?? 0))}%`,
+                  }}
+                />
+              </span>
               {option.label}: {option.voteCount}{' '}
               {option.voteCount === 1 ? 'voto' : 'votos'}
               {option.percent !== null

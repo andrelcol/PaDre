@@ -250,3 +250,42 @@ Registro das escolhas que já condicionam o código. Cada uma pode ser revista, 
 - Decisão: `community_polls`, `community_poll_options` e `community_poll_votes`. As categorias geral, modalidade, horário e local usam as mesmas opções e os mesmos votos. Modalidade aponta para `sports` e para `community_sports`. Horário com data guarda instante e fuso IANA; horário sem data fica texto. Local é nome manual, sem catálogo e sem identidade geográfica. Escolha única grava uma opção; múltipla grava o conjunto completo e substitui o anterior. O prazo é `closes_at`. A leitura calcula o estado efetivo com `now()` e não há tarefa agendada. Encerrar preserva o resultado. Cancelar tira o valor de decisão e não apaga a linha. Pergunta, opções e regra não mudam depois de publicar. O agregado e a seleção de quem consulta saem das funções. Não existe lista de eleitores. Até 10 enquetes por pessoa, por comunidade, a cada hora. A aba atualiza a cada 15 segundos. `created_by` e `closed_by` usam `on delete set null`. O voto usa `on delete cascade`. A trava da ADR-029 não ganha cláusula de enquete.
 - Consequências: comunidade pública não abre a enquete para quem só a descobriu. Sair ou ser removido tira o acesso e deixa o voto antigo no total, sem o nome. Conta sem histórico esportivo continua excluível; a enquete que ela criou permanece anônima. Conta com partida confirmada continua recusada pela ADR-029. Empate mostra todas as primeiras. Múltipla escolha pode somar mais de 100%. Erro de pergunta se corrige com cancelamento e uma enquete nova. Encontro automático fica para outra decisão.
 - Alternativas: um contador na opção divergiria do voto sob concorrência. Editar a opção publicada mudaria o sentido do voto já dado. `on delete restrict` no autor bloquearia exclusão por causa de consulta. Quatro tabelas de voto, uma por categoria, repetiriam a mesma regra. JSONB na opção misturaria modalidade, instante e lugar sem check.
+
+## ADR-032 — Local cadastrado guarda identidade própria e o encontro guarda cópia
+
+- Status: aceita
+- Contexto: o encontro já tinha nome e endereço em texto. O grupo precisava reutilizar quadra sem tratar o nome como chave e sem deixar uma correção do cadastro reescrever o encontro antigo.
+- Decisão: `venues` com UUID, escopo pessoal (`community_id` nulo) ou comunitário. Nome obrigatório, endereço informado pela pessoa, detalhes opcionais, latitude e longitude nulas ou válidas juntas. Sem PostGIS, sem geocodificação e sem catálogo global. Integrante ativo lê o local da comunidade. Só proprietário e administrador criam, editam e arquivam. `meetups.venue_id` é opcional. A seleção copia nome, endereço e detalhes para o encontro. `update_meetup` não mexe no local. `set_meetup_place` troca referência e cópia na mesma transação e recusa a troca quando já há outro confirmado. Endereço e coordenadas do cadastro não mudam. Arquivar impede seleção nova e preserva encontro, partida e projeção. A lista de encontros do local usa `can_read_meetup`. `created_by` é `on delete set null`. `venue_id` é `on delete restrict`.
+- Consequências: dois nomes iguais continuam dois lugares. Encontro manual e encontro antigo ficam com `venue_id` nulo. Comunidade pública não mostra endereço a quem não participa. Local pessoal não entra em encontro comunitário como cadastro. Opção de enquete de local continua texto. Mapa e estatística por local ficam para outra etapa. O detalhe está em [VENUES.md](./VENUES.md).
+- Alternativas: usar o nome como chave fundiria quadras diferentes. Deduzir coordenada do endereço inventaria um ponto. Atualizar o snapshot quando o cadastro mudasse alteraria o histórico. `on delete restrict` em `created_by` bloquearia exclusão de conta por causa de um local.
+
+## ADR-033 — Posição do local entra uma vez e o encontro guarda a própria cópia
+
+- Contexto: a ADR-032 deixou latitude e longitude imutáveis desde a criação, e o encontro só copiava o texto. A pessoa precisa marcar o ponto no mapa, inclusive num local que já existe sem coordenada, sem reescrever encontro antigo.
+- Decisão: `set_venue_location` grava o par uma única vez, com `location_set_at` e `location_set_by`, para quem já pode editar o local. O gatilho recusa qualquer troca seguinte e continua protegendo endereço, autoria e comunidade. `meetups.location_latitude` e `location_longitude` nascem na seleção: vêm do local naquele instante, ou de um ponto explícito do local manual. `set_meetup_place` atualiza essa cópia junto com o texto e a referência. Uma posição adicionada depois ao local não altera encontro já criado. O mapa lê só as funções de lista já autorizadas. A posição do aparelho não é persistida.
+- Consequências: o mapa claro usa Liberty e o escuro usa Dark, no OpenFreeMap, sem chave. Não há PostGIS, geocodificação nem rota interna. O detalhe está em [MAPS.md](./MAPS.md).
+- Alternativas: permitir mover o ponto depois faria o mesmo cadastro representar outra quadra. Mostrar a coordenada viva do local no encontro antigo mudaria o histórico. Inverter o mapa por CSS estragaria nomes e cores.
+
+## ADR-034 — Estatística por local lê a contribuição e o venue_id
+
+- Status: aceita
+- Contexto: o grupo quer ver desempenho por quadra sem um segundo placar e sem fundir locais pelo nome.
+- Decisão: `my_venue_statistics`, `my_venue_statistic` e `community_venue_usage` agregam `match_player_statistics` de partidas `confirmed`, pelo `meetups.venue_id`. Não há tabela de totais. `venue_id` nulo fica fora dos locais. Nome e coordenada só saem para quem já pode ler o cadastro. Integrante que saiu conserva o próprio número, sem o cadastro atual. O uso da comunidade conta partidas distintas e exige participação ativa. A comparação de aproveitamento exige a mesma modalidade e cinco partidas em ao menos dois locais. O mapa consulta um local por vez.
+- Consequências: reprocessar a contribuição reprocessa o local. Arquivar não apaga o histórico. Dono de local pessoal não vê partida alheia. Não há ranking. O detalhe está em [STATISTICS.md](./STATISTICS.md).
+- Alternativas: contador por local divergiria da contribuição. Agrupar por nome fundiria quadras diferentes. Materializar agora adiantaria otimização sem volume.
+
+## ADR-035 — Detalhe pessoal fica fora da leitura pública do perfil
+
+- Status: aceita
+- Contexto: altura, sexo e foto são opcionais e não podem vazar pelas consultas que já leem `profiles`.
+- Decisão: `profile_personal_details` guarda altura em centímetros, sexo (`female`, `male`, `intersex` ou nulo) e a chave do arquivo. Os três flags de exibição nascem desligados. Outra pessoa só recebe o campo quando o perfil é público e o flag está ligado. "Prefiro não informar" grava nulo. Sexo não filtra comunidade, encontro nem cartinha. A foto não entra em Base64 nem em `bytea`. O ambiente local não tem Storage, então o envio recusa com erro explícito e `avatar_path` fica nulo.
+- Consequências: a consulta antiga de perfil não cresce. Sem Storage, a cartinha usa a inicial. A exclusão da conta sem histórico continua possível porque a linha pessoal sai em cascade.
+- Alternativas: colunas novas em `profiles` ampliariam toda leitura pública. URL assinada gravada no banco expiraria. Arquivo local do navegador fingiria persistência.
+
+## ADR-036 — Cartinha da comunidade é versão, amostra e média das médias
+
+- Status: aceita
+- Contexto: cada comunidade quer avaliar habilidades diferentes, sem transformar isso em ranking global nem em estatística de partida.
+- Decisão: uma configuração ativa por comunidade, com 3 a 8 atributos e versão imutável. Mudança estrutural publica outra versão e não migra nota. A nota vigente é única por avaliador, jogador, atributo e versão, na escala inteira de 1 a 99. A média sai no Postgres. O atributo só publica média com pelo menos 3 avaliadores ativos. O overall é a média dessas médias, peso igual, arredondado só no fim. Participação é voluntária. Desativar apaga as notas recebidas. Sair apaga as notas dadas e não as devolve na reentrada. Voto individual não sai da função de leitura. O limite é 120 alterações por avaliador, comunidade e hora.
+- Consequências: cartinha de comunidade multiesportiva é geral nesta versão. Grupo pequeno não promete anonimato matemático. Partida confirmada permanece independente. O detalhe está em [PLAYER_CARDS.md](./PLAYER_CARDS.md).
+- Alternativas: seis atributos fixos de futebol não servem vôlei. Somar todas as notas daria mais peso ao atributo mais votado. Reaproveitar nota antiga numa versão nova mudaria o sentido do voto.

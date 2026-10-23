@@ -54,6 +54,11 @@ export async function createCommunityMeetup(slug: string, draft: MeetupDraft) {
   const { data, error } = await supabase.rpc('create_community_meetup', {
     community_slug: slug,
     ...writeArgs(draft, instants),
+    venue_id: draft.placeMode === 'venue' ? draft.venueId : null,
+    location_latitude:
+      draft.placeMode === 'manual' ? draft.locationLatitude : null,
+    location_longitude:
+      draft.placeMode === 'manual' ? draft.locationLongitude : null,
   })
   if (error) throw error
   if (typeof data !== 'string') {
@@ -74,10 +79,14 @@ export async function joinCommunityMeetup(meetupId: string) {
 export async function createMeetup(draft: MeetupDraft) {
   const supabase = requireSupabase()
   const instants = meetupInstants(draft)
-  const { data, error } = await supabase.rpc(
-    'create_meetup',
-    writeArgs(draft, instants),
-  )
+  const { data, error } = await supabase.rpc('create_meetup', {
+    ...writeArgs(draft, instants),
+    venue_id: draft.placeMode === 'venue' ? draft.venueId : null,
+    location_latitude:
+      draft.placeMode === 'manual' ? draft.locationLatitude : null,
+    location_longitude:
+      draft.placeMode === 'manual' ? draft.locationLongitude : null,
+  })
   if (error) throw error
   if (typeof data !== 'string') {
     throw new Error('Não foi possível concluir. Tente de novo.')
@@ -94,6 +103,25 @@ export async function updateMeetup(meetupId: string, draft: MeetupWrite) {
   const { data, error } = await supabase.rpc('update_meetup', {
     meetup_id: meetupId,
     ...writeArgs(draft, instants),
+  })
+  if (error) throw error
+  if (typeof data !== 'string') {
+    throw new Error('Não foi possível concluir. Tente de novo.')
+  }
+  return data
+}
+
+export async function setMeetupPlace(meetupId: string, draft: MeetupDraft) {
+  const supabase = requireSupabase()
+  const registered = draft.placeMode === 'venue'
+  const { data, error } = await supabase.rpc('set_meetup_place', {
+    meetup_id: meetupId,
+    venue_id: registered ? draft.venueId : null,
+    location_name: registered ? null : draft.locationName,
+    location_address: registered ? null : draft.locationAddress || null,
+    location_details: registered ? null : draft.locationDetails || null,
+    location_latitude: registered ? null : draft.locationLatitude,
+    location_longitude: registered ? null : draft.locationLongitude,
   })
   if (error) throw error
   if (typeof data !== 'string') {

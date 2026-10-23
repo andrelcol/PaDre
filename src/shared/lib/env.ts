@@ -1,8 +1,15 @@
 import { z } from 'zod'
 
+import { isNativeAndroid } from '@/shared/platform/runtime.ts'
+import {
+  publicWebOrigin,
+  resolveSupabaseUrl,
+} from '@/shared/platform/supabase-url.ts'
+
 const supabaseEnvSchema = z.object({
   VITE_SUPABASE_URL: z.url(),
   VITE_SUPABASE_ANON_KEY: z.string().min(1),
+  VITE_SUPABASE_URL_ANDROID: z.url().optional(),
 })
 
 export type SupabaseEnv = {
@@ -11,15 +18,29 @@ export type SupabaseEnv = {
 }
 
 export function readSupabaseEnv(): SupabaseEnv | null {
+  const androidUrl = import.meta.env.VITE_SUPABASE_URL_ANDROID
   const parsed = supabaseEnvSchema.safeParse({
     VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
     VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    VITE_SUPABASE_URL_ANDROID: androidUrl || undefined,
   })
 
   if (!parsed.success) return null
 
   return {
-    url: parsed.data.VITE_SUPABASE_URL,
+    url: resolveSupabaseUrl(parsed.data.VITE_SUPABASE_URL, {
+      android: isNativeAndroid(),
+      androidUrl: parsed.data.VITE_SUPABASE_URL_ANDROID,
+    }),
     anonKey: parsed.data.VITE_SUPABASE_ANON_KEY,
   }
+}
+
+export function readPublicWebOrigin() {
+  const configured = import.meta.env.VITE_PUBLIC_WEB_ORIGIN
+  return publicWebOrigin({
+    android: isNativeAndroid(),
+    configured: typeof configured === 'string' ? configured : undefined,
+    locationOrigin: window.location.origin,
+  })
 }

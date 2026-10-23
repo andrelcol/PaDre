@@ -18,18 +18,36 @@ export function CommunityMessageRow({
   const sentAt = formatMessageTime(message.createdAt)
 
   return (
-    <article className="flex flex-col gap-1 border-b py-3 last:border-b-0">
+    <article
+      className={
+        message.mine
+          ? 'ml-8 flex flex-col gap-1 rounded-2xl rounded-br-md bg-primary px-3 py-2 text-primary-foreground'
+          : 'mr-8 flex flex-col gap-1 rounded-2xl rounded-bl-md bg-muted px-3 py-2'
+      }
+    >
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-medium">{message.authorUsername}</p>
         <time
-          className="text-xs text-muted-foreground"
+          className={
+            message.mine
+              ? 'text-xs text-primary-foreground/80'
+              : 'text-xs text-muted-foreground'
+          }
           dateTime={message.createdAt}
         >
           {sentAt}
         </time>
       </header>
       {message.deleted ? (
-        <p className="text-sm text-muted-foreground">Mensagem removida</p>
+        <p
+          className={
+            message.mine
+              ? 'text-sm text-primary-foreground/80'
+              : 'text-sm text-muted-foreground'
+          }
+        >
+          Mensagem removida
+        </p>
       ) : (
         <p className="text-sm whitespace-pre-wrap break-words">
           {message.body}
@@ -39,7 +57,7 @@ export function CommunityMessageRow({
         <Link
           to={`/encontros/${message.meetup.id}`}
           aria-label={`Encontro compartilhado ${message.meetup.title}`}
-          className="flex flex-col gap-1 rounded-md border p-3 text-sm"
+          className="flex flex-col gap-1 rounded-md border bg-card p-3 text-sm text-card-foreground"
         >
           <span className="font-medium">{message.meetup.title}</span>
           <span>

@@ -1,2 +1,5 @@
 supabase/.runtime
 .tools
+android
+artifacts
+dist

@@ -34,6 +34,9 @@ const authExternalUrl = `${apiUrl}/auth/v1`
 const allowedOrigins = new Set([
   'http://127.0.0.1:5173',
   'http://localhost:5173',
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
 ])
 
 if (dbPort === forbiddenPort) {
@@ -578,6 +581,8 @@ async function writeEnv(secrets) {
     '# Gerado por npm run supabase:start. Não commitar.',
     `VITE_SUPABASE_URL=${apiUrl}`,
     `VITE_SUPABASE_ANON_KEY=${secrets.anonKey}`,
+    'VITE_SUPABASE_URL_ANDROID=http://10.0.2.2:54321',
+    'VITE_PUBLIC_WEB_ORIGIN=http://127.0.0.1:5173',
     `DATABASE_URL=${databaseUrl(secrets)}`,
     '',
   ].join('\n')

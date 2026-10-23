@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { parseCoordinatePair } from '@/domains/maps/model/coordinates.ts'
+
 import { timezoneSchema } from '@/domains/identity/model/profile.ts'
 import { scoringRuleSchema } from '@/domains/sports/model/scoring.ts'
 
@@ -30,13 +32,20 @@ export function canChangeStructure(confirmedCount: number) {
   return confirmedCount <= 1
 }
 
+export type MeetupPlaceMode = 'manual' | 'venue'
+
 export type MeetupFormValues = {
   sportId: string
   sportFormatId: string
   title: string
   description: string
+  placeMode: MeetupPlaceMode
+  venueId: string
   locationName: string
   locationAddress: string
+  locationDetails: string
+  locationLatitude: number | null
+  locationLongitude: number | null
   timeZone: string
   startDate: string
   startTime: string
@@ -53,8 +62,13 @@ export function defaultMeetupFormValues(timeZone: string): MeetupFormValues {
     sportFormatId: '',
     title: '',
     description: '',
+    placeMode: 'manual',
+    venueId: '',
     locationName: '',
     locationAddress: '',
+    locationDetails: '',
+    locationLatitude: null,
+    locationLongitude: null,
     timeZone,
     startDate: tomorrow,
     startTime: '19:00',
@@ -91,8 +105,13 @@ export const meetupDraftSchema = z
     scoringRuleVersionId: z.uuid('Escolha um formato com regra ativa.'),
     title: z.string().trim().min(1, 'Informe o título.').max(80),
     description: z.string().trim().max(500),
-    locationName: z.string().trim().min(1, 'Informe o local.').max(120),
+    placeMode: z.enum(['manual', 'venue']).default('manual'),
+    venueId: z.string().default(''),
+    locationName: z.string().trim().max(120),
     locationAddress: z.string().trim().max(200),
+    locationDetails: z.string().trim().max(500).default(''),
+    locationLatitude: z.number().nullable().default(null),
+    locationLongitude: z.number().nullable().default(null),
     timeZone: timezoneSchema,
     startDate: wallDate,
     startTime: wallTime,
@@ -105,6 +124,38 @@ export const meetupDraftSchema = z
       .max(meetupCapacityMax, 'A capacidade máxima é 64.'),
   })
   .superRefine((draft, context) => {
+    if (draft.placeMode === 'venue') {
+      if (!z.uuid().safeParse(draft.venueId).success) {
+        context.addIssue({
+          code: 'custom',
+          path: ['venueId'],
+          message: 'Escolha um local cadastrado.',
+        })
+      }
+    } else if (draft.locationName.length < 1) {
+      context.addIssue({
+        code: 'custom',
+        path: ['locationName'],
+        message: 'Informe o local.',
+      })
+    }
+    if (
+      draft.placeMode === 'manual' &&
+      ((draft.locationLatitude == null) !== (draft.locationLongitude == null) ||
+        (draft.locationLatitude != null &&
+          draft.locationLongitude != null &&
+          !parseCoordinatePair(
+            draft.locationLatitude,
+            draft.locationLongitude,
+          )))
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['locationLatitude'],
+        message: 'Informe uma posição válida ou deixe o mapa sem marcação.',
+      })
+    }
+
     let starts: Date
     let ends: Date
     try {
@@ -230,6 +281,10 @@ const detailSchema = z.object({
   time_zone: z.string(),
   location_name: z.string(),
   location_address: z.string().nullable(),
+  location_details: z.string().nullable().optional(),
+  location_latitude: z.number().nullable().optional(),
+  location_longitude: z.number().nullable().optional(),
+  venue_id: z.uuid().nullable().optional(),
   max_participants: z.number().int(),
   confirmed_count: z.number().int(),
   open_spots: z.number().int(),
@@ -271,6 +326,10 @@ export type MeetupDetail = {
   timeZone: string
   locationName: string
   locationAddress: string
+  locationDetails: string
+  locationLatitude: number | null
+  locationLongitude: number | null
+  venueId: string | null
   maxParticipants: number
   confirmedCount: number
   openSpots: number
@@ -310,6 +369,10 @@ export function parseMeetupDetail(value: unknown): MeetupDetail {
     timeZone: row.time_zone,
     locationName: row.location_name,
     locationAddress: row.location_address ?? '',
+    locationDetails: row.location_details ?? '',
+    locationLatitude: row.location_latitude ?? null,
+    locationLongitude: row.location_longitude ?? null,
+    venueId: row.venue_id ?? null,
     maxParticipants: row.max_participants,
     confirmedCount: row.confirmed_count,
     openSpots: row.open_spots,
@@ -366,8 +429,11 @@ export function meetupErrorMessage(error: { message?: string; code?: string }) {
   if (message.includes('capacity below confirmed')) {
     return 'A capacidade não pode ficar abaixo dos confirmados.'
   }
+  if (message.includes('venue archived')) {
+    return 'Este local está arquivado e não pode ser escolhido.'
+  }
   if (message.includes('structural change locked')) {
-    return 'Com outros confirmados, modalidade, regra e horário ficam travados.'
+    return 'Com outros confirmados, modalidade, regra, horário e local ficam travados.'
   }
   if (message.includes('sport format not found')) {
     return 'Escolha um formato ativo do catálogo.'
@@ -394,6 +460,28 @@ export function meetupErrorMessage(error: { message?: string; code?: string }) {
     return 'Você não pode alterar esse encontro.'
   }
   return 'Não foi possível concluir. Tente de novo.'
+}
+
+export function meetupPlaceChanged(
+  current: {
+    venueId: string | null
+    locationName: string
+    locationAddress: string
+    locationDetails: string
+    locationLatitude: number | null
+    locationLongitude: number | null
+  },
+  draft: MeetupDraft,
+) {
+  if (draft.placeMode === 'venue') return draft.venueId !== current.venueId
+  return (
+    current.venueId !== null ||
+    draft.locationName !== current.locationName ||
+    draft.locationAddress !== current.locationAddress ||
+    draft.locationDetails !== current.locationDetails ||
+    draft.locationLatitude !== current.locationLatitude ||
+    draft.locationLongitude !== current.locationLongitude
+  )
 }
 
 export function meetupLoadError(error: unknown) {

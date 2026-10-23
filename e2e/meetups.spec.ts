@@ -62,7 +62,7 @@ test('two friends create, accept, leave and cancel a meetup', async ({
     await expect(pageB.getByText('Você saiu do encontro.')).toBeVisible()
 
     await pageA.reload()
-    await expect(pageA.getByText('1 vaga disponível')).toBeVisible()
+    await expect(pageA.getByText('1 vaga disponível').first()).toBeVisible()
     await pageA.getByRole('button', { name: 'Cancelar encontro' }).click()
     await pageA.getByRole('button', { name: 'Confirmar cancelamento' }).click()
     await expect(pageA.getByText('Cancelado', { exact: true })).toBeVisible()

@@ -46,6 +46,9 @@ type CommunityDetailViewProps = {
   onMoreMeetups?: () => void
   chat?: ReactNode
   polls?: ReactNode
+  venues?: ReactNode
+  cards?: ReactNode
+  initialTab?: string
 }
 
 export function CommunityDetailView({
@@ -69,6 +72,9 @@ export function CommunityDetailView({
   onMoreMeetups = () => undefined,
   chat = null,
   polls = null,
+  venues = null,
+  cards = null,
+  initialTab,
 }: CommunityDetailViewProps) {
   const [confirmingLeave, setConfirmingLeave] = useState(false)
   const [username, setUsername] = useState('')
@@ -173,8 +179,13 @@ export function CommunityDetailView({
         onMore={onMoreMeetups}
       />
 
-      {polls}
-      {chat}
+      <CommunitySections
+        venues={venues}
+        polls={polls}
+        chat={chat}
+        cards={cards}
+        initialTab={initialTab}
+      />
 
       <section
         className="flex flex-col gap-3"
@@ -362,5 +373,61 @@ function MemberRow({
         </div>
       ) : null}
     </li>
+  )
+}
+
+function CommunitySections({
+  venues,
+  polls,
+  chat,
+  cards,
+  initialTab,
+}: {
+  venues: ReactNode
+  polls: ReactNode
+  chat: ReactNode
+  cards: ReactNode
+  initialTab?: string
+}) {
+  const tabs = [
+    venues ? { id: 'locais', label: 'Locais', content: venues } : null,
+    cards ? { id: 'cartinhas', label: 'Cartinhas', content: cards } : null,
+    polls ? { id: 'enquetes', label: 'Enquetes', content: polls } : null,
+    chat ? { id: 'chat', label: 'Chat', content: chat } : null,
+  ].filter((tab) => tab !== null)
+  const [current, setCurrent] = useState(
+    tabs.some((tab) => tab.id === initialTab)
+      ? (initialTab ?? '')
+      : (tabs[0]?.id ?? ''),
+  )
+  if (tabs.length === 0) return null
+  const active = tabs.find((tab) => tab.id === current) ?? tabs[0]
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div
+        role="tablist"
+        aria-label="Seções da comunidade"
+        className="flex gap-2"
+      >
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={tab.id === active?.id}
+            className={
+              tab.id === active?.id
+                ? 'min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground'
+                : 'min-h-11 rounded-full bg-secondary px-4 text-sm font-semibold'
+            }
+            onClick={() => setCurrent(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel">{active?.content}</div>
+    </div>
   )
 }

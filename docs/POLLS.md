@@ -4,7 +4,7 @@ Uma enquete pertence a uma comunidade. Quem não participa não lê, não vota e
 
 A pergunta, as opções e a regra de voto ficam congeladas na publicação. Erro de redação se resolve cancelando e criando outra. Não há edição nesta versão, para o voto continuar comparável com o que foi perguntado.
 
-Não nasce encontro a partir de uma enquete. O resultado é uma consulta do grupo, não uma reserva de quadra.
+Não nasce encontro a partir de uma enquete. O resultado é uma consulta do grupo, não uma reserva de quadra. A opção de local continua texto livre. Uma referência opcional a `venues` pode entrar depois, sem converter enquete já publicada e sem criar o encontro sozinha.
 
 ## Modelo
 

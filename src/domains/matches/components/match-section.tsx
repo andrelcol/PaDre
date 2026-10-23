@@ -9,12 +9,14 @@ import { MatchResultForm } from '@/domains/matches/components/match-result-form.
 import {
   confirmedSides,
   describeScore,
+  scoreLines,
   matchActionLabel,
   matchStatusLabel,
   messageFromMatchError,
   outcomeLabel,
   type MatchRecord,
 } from '@/domains/matches/model/match.ts'
+import { cn } from '@/shared/lib/utils.ts'
 import { Button } from '@/shared/ui/button.tsx'
 
 type MatchSectionProps = {
@@ -153,6 +155,74 @@ export function MatchSection({
   )
 }
 
+function matchStatusClass(status: MatchRecord['status']) {
+  if (status === 'confirmed') return 'font-semibold text-success'
+  if (status === 'disputed') return 'font-semibold text-warning'
+  if (status === 'voided') return 'text-muted-foreground line-through'
+  if (status === 'pending_confirmation') return 'font-semibold text-foreground'
+  return 'text-muted-foreground'
+}
+
+function Scoreboard({ match }: { match: MatchRecord }) {
+  if (!match.result) return null
+  const lines = scoreLines(match.rule, match.result.payload)
+  if (lines.length === 0) return null
+  const side1 = match.teams.find((team) => team.side === 1)
+  const side2 = match.teams.find((team) => team.side === 2)
+  const winner = match.result.outcome
+
+  return (
+    <div className="rounded-2xl bg-ink px-4 py-4 text-ink-foreground">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+        <p
+          className={
+            winner === 'side_1' ? 'text-pitch font-bold' : 'font-semibold'
+          }
+        >
+          {side1?.name ?? 'Lado 1'}
+        </p>
+        <p className="text-center text-xs tracking-wide text-ink-foreground/70">
+          {match.rule.rule_type === 'goal_based'
+            ? 'Gols'
+            : match.rule.rule_type === 'game_based'
+              ? 'Games'
+              : 'Sets'}
+        </p>
+        <p
+          className={
+            winner === 'side_2'
+              ? 'text-right font-bold text-pitch'
+              : 'text-right font-semibold'
+          }
+        >
+          {side2?.name ?? 'Lado 2'}
+        </p>
+      </div>
+      <ul className="mt-3 flex flex-col gap-1">
+        {lines.map((line) => (
+          <li
+            key={line.label}
+            className="grid grid-cols-[1fr_auto_1fr] items-center gap-3"
+          >
+            <span className="font-display text-3xl font-bold">{line.left}</span>
+            <span className="text-xs text-ink-foreground/70">{line.label}</span>
+            <span className="font-display text-right text-3xl font-bold">
+              {line.right}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-sm">
+        {winner === 'draw'
+          ? 'Empate'
+          : winner === 'side_1'
+            ? `Vencedor: ${side1?.name ?? 'Lado 1'}`
+            : `Vencedor: ${side2?.name ?? 'Lado 2'}`}
+      </p>
+    </div>
+  )
+}
+
 function MatchCard({
   match,
   index,
@@ -204,7 +274,7 @@ function MatchCard({
   return (
     <li className="flex flex-col gap-4 rounded-xl border p-4">
       <header className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">
+        <p className={cn('text-sm', matchStatusClass(match.status))}>
           Partida {index} · {matchStatusLabel(match.status)}
         </p>
         <h3 className="font-medium">
@@ -216,7 +286,8 @@ function MatchCard({
         <TeamList team={side2} />
       </div>
       {match.result ? (
-        <div className="flex flex-col gap-1 text-sm">
+        <div className="flex flex-col gap-3 text-sm">
+          <Scoreboard match={match} />
           <p>
             Placar: {describeScore(match.rule, match.result.payload)} ·{' '}
             {outcomeLabel(match.result.outcome, match.teams)}

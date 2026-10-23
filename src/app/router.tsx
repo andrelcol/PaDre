@@ -1,30 +1,60 @@
 import { createBrowserRouter } from 'react-router'
 
 import { AppShell } from '@/app/AppShell.tsx'
+import { lazyPage } from '@/app/lazy-page.ts'
+import { RouteError } from '@/app/route-error.tsx'
 import {
   GuestOnly,
   RequireAuth,
 } from '@/domains/identity/components/guards.tsx'
-import { CatalogPage } from '@/pages/CatalogPage.tsx'
-import { CommunitiesPage } from '@/pages/CommunitiesPage.tsx'
-import { CommunityPage } from '@/pages/CommunityPage.tsx'
-import { FriendsPage } from '@/pages/FriendsPage.tsx'
-import { NewCommunityPage } from '@/pages/NewCommunityPage.tsx'
-import { MeetupPage } from '@/pages/MeetupPage.tsx'
-import { MeetupsPage } from '@/pages/MeetupsPage.tsx'
-import { NewMeetupPage } from '@/pages/NewMeetupPage.tsx'
-import { EditProfilePage } from '@/pages/EditProfilePage.tsx'
-import { HomePage } from '@/pages/HomePage.tsx'
-import { InvitePage } from '@/pages/InvitePage.tsx'
-import { LoginPage } from '@/pages/LoginPage.tsx'
-import { ProfilePage } from '@/pages/ProfilePage.tsx'
-import { RecoverPasswordPage } from '@/pages/RecoverPasswordPage.tsx'
-import { ResetPasswordPage } from '@/pages/ResetPasswordPage.tsx'
-import { SignupPage } from '@/pages/SignupPage.tsx'
+
+function page(load: () => Promise<Record<string, unknown>>, name: string) {
+  return lazyPage(load, name)
+}
+
+const CatalogPage = page(() => import('@/pages/CatalogPage.tsx'), 'CatalogPage')
+const CommunitiesPage = page(
+  () => import('@/pages/CommunitiesPage.tsx'),
+  'CommunitiesPage',
+)
+const CommunityPage = page(
+  () => import('@/pages/CommunityPage.tsx'),
+  'CommunityPage',
+)
+const FriendsPage = page(() => import('@/pages/FriendsPage.tsx'), 'FriendsPage')
+const NewCommunityPage = page(
+  () => import('@/pages/NewCommunityPage.tsx'),
+  'NewCommunityPage',
+)
+const MeetupPage = page(() => import('@/pages/MeetupPage.tsx'), 'MeetupPage')
+const MeetupsPage = page(() => import('@/pages/MeetupsPage.tsx'), 'MeetupsPage')
+const NewMeetupPage = page(
+  () => import('@/pages/NewMeetupPage.tsx'),
+  'NewMeetupPage',
+)
+const EditProfilePage = page(
+  () => import('@/pages/EditProfilePage.tsx'),
+  'EditProfilePage',
+)
+const HomePage = page(() => import('@/pages/HomePage.tsx'), 'HomePage')
+const InvitePage = page(() => import('@/pages/InvitePage.tsx'), 'InvitePage')
+const LoginPage = page(() => import('@/pages/LoginPage.tsx'), 'LoginPage')
+const ProfilePage = page(() => import('@/pages/ProfilePage.tsx'), 'ProfilePage')
+const RecoverPasswordPage = page(
+  () => import('@/pages/RecoverPasswordPage.tsx'),
+  'RecoverPasswordPage',
+)
+const ResetPasswordPage = page(
+  () => import('@/pages/ResetPasswordPage.tsx'),
+  'ResetPasswordPage',
+)
+const SignupPage = page(() => import('@/pages/SignupPage.tsx'), 'SignupPage')
+const VenuesPage = page(() => import('@/pages/VenuesPage.tsx'), 'VenuesPage')
 
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/convite/:token', element: <InvitePage /> },
@@ -60,6 +90,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <MeetupPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/locais',
+        element: (
+          <RequireAuth>
+            <VenuesPage />
           </RequireAuth>
         ),
       },

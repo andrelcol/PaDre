@@ -127,15 +127,37 @@ function StatisticFigures({
       : []),
   ]
 
+  const played = bucket.matches_played || 0
+  const winShare = played > 0 ? Math.round((bucket.wins / played) * 100) : 0
+
   return (
-    <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-      {rows.map(([label, value]) => (
-        <div key={label}>
-          <dt className="text-muted-foreground">{label}</dt>
-          <dd>{value}</dd>
+    <div className="flex flex-col gap-4">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {rows.map(([label, value]) => (
+          <div key={label} className="rounded-2xl bg-muted px-3 py-3">
+            <dd className="font-display text-2xl font-bold">{value}</dd>
+            <dt className="text-sm text-muted-foreground">{label}</dt>
+          </div>
+        ))}
+      </dl>
+      {played > 0 ? (
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Vitórias em relação às partidas
+          </p>
+          <div
+            className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"
+            role="img"
+            aria-label={`${winShare}% das partidas foram vitórias`}
+          >
+            <div
+              className="h-full rounded-full bg-pitch"
+              style={{ width: `${winShare}%` }}
+            />
+          </div>
         </div>
-      ))}
-    </dl>
+      ) : null}
+    </div>
   )
 }
 

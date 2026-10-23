@@ -1,4 +1,8 @@
 import {
+  parsePersonalDetails,
+  type PersonalDetails,
+} from '@/domains/identity/model/personal-details.ts'
+import {
   ownProfileSchema,
   type OwnProfile,
   type ProfileEdit,
@@ -71,4 +75,30 @@ export async function updateOwnProfile(userId: string, input: ProfileEdit) {
   if (!preferencesResult.data?.length) {
     throw new Error('Não foi possível salvar o fuso horário.')
   }
+}
+
+export async function getOwnPersonalDetails() {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('get_own_profile_details')
+  if (error) throw error
+  return parsePersonalDetails(data)
+}
+
+export async function updateOwnPersonalDetails(input: {
+  heightCm: number | null
+  sex: PersonalDetails['sex']
+  showHeight: boolean
+  showSex: boolean
+  showAvatar: boolean
+}) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('update_profile_details', {
+    height_cm: input.heightCm,
+    sex: input.sex ?? '',
+    show_height: input.showHeight,
+    show_sex: input.showSex,
+    show_avatar: input.showAvatar,
+  })
+  if (error) throw error
+  return parsePersonalDetails(data)
 }

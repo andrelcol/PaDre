@@ -7,6 +7,7 @@ import {
 } from '@/domains/meetups/model/meetup.ts'
 import { formatMeetupInstant } from '@/domains/meetups/model/schedule.ts'
 import { describeScoringRule } from '@/domains/sports/model/scoring.ts'
+import { MeetupMapPreview } from '@/domains/maps/components/meetup-map-preview.tsx'
 import { Button } from '@/shared/ui/button.tsx'
 import { Label } from '@/shared/ui/label.tsx'
 
@@ -65,13 +66,24 @@ export function MeetupDetailView({
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">
-          {statusLabels[meetup.status]}
+      <header className="flex flex-col gap-3 rounded-3xl bg-ink px-6 py-8 text-ink-foreground">
+        <p className="text-sm font-semibold text-pitch">
+          <span>{statusLabels[meetup.status]}</span>
+          <span> · {meetup.sportName}</span>
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">
           {meetup.title}
         </h1>
+        <p className="font-display text-2xl font-semibold">
+          {formatMeetupInstant(meetup.startsAt, meetup.timeZone)}
+        </p>
+        <p>
+          {meetup.locationName}
+          {meetup.locationAddress ? ` · ${meetup.locationAddress}` : ''}
+        </p>
+        <p className="text-sm">
+          {meetup.confirmedCount} de {meetup.maxParticipants} · {spotLabel}
+        </p>
         {meetup.communitySlug && meetup.communityName ? (
           <p className="text-sm">
             Comunidade:{' '}
@@ -85,56 +97,68 @@ export function MeetupDetailView({
         ) : null}
         {meetup.description ? <p>{meetup.description}</p> : null}
         {meetup.myParticipation === 'confirmed' ? (
-          <p className="text-sm text-muted-foreground">
-            Sua presença está confirmada.
-          </p>
+          <p className="text-sm">Sua presença está confirmada.</p>
         ) : null}
         {meetup.status === 'cancelled' ? (
-          <p className="text-sm text-muted-foreground">
-            Este encontro foi cancelado.
-          </p>
+          <p className="text-sm">Este encontro foi cancelado.</p>
         ) : null}
       </header>
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
-        <div>
+        <div className="rounded-2xl border bg-card p-4">
           <dt className="text-muted-foreground">Modalidade</dt>
-          <dd>{meetup.sportName}</dd>
+          <dd className="font-display text-xl font-semibold">
+            {meetup.sportName}
+          </dd>
         </div>
-        <div>
+        <div className="rounded-2xl border bg-card p-4">
           <dt className="text-muted-foreground">Formato</dt>
-          <dd>{meetup.formatName}</dd>
+          <dd className="font-display text-xl font-semibold">
+            {meetup.formatName}
+          </dd>
         </div>
-        <div>
+        <div className="rounded-2xl border bg-card p-4">
           <dt className="text-muted-foreground">Início</dt>
-          <dd>{formatMeetupInstant(meetup.startsAt, meetup.timeZone)}</dd>
+          <dd className="font-display text-xl font-semibold">
+            {formatMeetupInstant(meetup.startsAt, meetup.timeZone)}
+          </dd>
         </div>
-        <div>
+        <div className="rounded-2xl border bg-card p-4">
           <dt className="text-muted-foreground">Término</dt>
-          <dd>{formatMeetupInstant(meetup.endsAt, meetup.timeZone)}</dd>
+          <dd className="font-display text-xl font-semibold">
+            {formatMeetupInstant(meetup.endsAt, meetup.timeZone)}
+          </dd>
         </div>
-        <div>
+        <div className="rounded-2xl border bg-card p-4">
           <dt className="text-muted-foreground">Fuso</dt>
           <dd>{meetup.timeZone}</dd>
         </div>
-        <div>
+        <div className="rounded-2xl border bg-card p-4 sm:col-span-2">
           <dt className="text-muted-foreground">Local</dt>
-          <dd>
-            {meetup.locationName}
-            {meetup.locationAddress ? ` · ${meetup.locationAddress}` : ''}
+          <dd className="flex flex-col gap-3">
+            <span>
+              {meetup.locationName}
+              {meetup.locationAddress ? ` · ${meetup.locationAddress}` : ''}
+              {meetup.locationDetails ? ` · ${meetup.locationDetails}` : ''}
+            </span>
+            <MeetupMapPreview
+              name={meetup.locationName}
+              latitude={meetup.locationLatitude}
+              longitude={meetup.locationLongitude}
+            />
           </dd>
         </div>
-        <div>
+        <div className="rounded-2xl border bg-card p-4">
           <dt className="text-muted-foreground">Organização</dt>
           <dd>{meetup.organizerUsername}</dd>
         </div>
-        <div>
+        <div className="rounded-2xl border bg-card p-4">
           <dt className="text-muted-foreground">Vagas</dt>
-          <dd>
+          <dd className="font-display text-xl font-semibold">
             {meetup.confirmedCount} de {meetup.maxParticipants} · {spotLabel}
           </dd>
         </div>
       </dl>
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
         <h2 className="text-lg font-semibold">Regra preservada</h2>
         <ul className="text-sm text-muted-foreground">
           {describeScoringRule(meetup.rule).map((line) => (
@@ -142,14 +166,19 @@ export function MeetupDetailView({
           ))}
         </ul>
       </section>
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Participantes confirmados</h2>
         <ul
           aria-label="Participantes confirmados"
-          className="flex flex-col gap-1"
+          className="flex flex-wrap gap-2"
         >
           {meetup.participants.map((person) => (
-            <li key={person.username}>{person.username}</li>
+            <li
+              key={person.username}
+              className="rounded-full border bg-card px-3 py-2 text-sm"
+            >
+              {person.username}
+            </li>
           ))}
         </ul>
       </section>
@@ -199,7 +228,7 @@ export function MeetupDetailView({
             {meetup.invitations.map((invitation) => (
               <li
                 key={invitation.id}
-                className="flex flex-col gap-2 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <span>
                   {invitation.username} · {invitationLabels[invitation.status]}
@@ -226,7 +255,7 @@ export function MeetupDetailView({
       ) : null}
 
       {meetup.isOrganizer && meetup.status === 'scheduled' ? (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" disabled={pending} onClick={onEdit}>
               Editar encontro

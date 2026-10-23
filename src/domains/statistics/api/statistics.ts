@@ -7,6 +7,11 @@ import {
   parseMeetupStatistics,
   parseOwnStatistics,
 } from '@/domains/statistics/model/statistics.ts'
+import {
+  parseVenuePerformance,
+  parseVenuePerformanceList,
+  parseVenueUsage,
+} from '@/domains/statistics/model/venue-statistics.ts'
 import { requireSupabase } from '@/shared/lib/supabase.ts'
 
 export async function getMyStatistics() {
@@ -14,6 +19,37 @@ export async function getMyStatistics() {
   const { data, error } = await supabase.rpc('my_statistics')
   if (error) throw error
   return parseOwnStatistics(data)
+}
+
+export async function getMyVenueStatistics(
+  sportId: string | null,
+  sportFormatId: string | null,
+) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('my_venue_statistics', {
+    sport_id: sportId ?? undefined,
+    sport_format_id: sportFormatId ?? undefined,
+  })
+  if (error) throw error
+  return parseVenuePerformanceList(data)
+}
+
+export async function getMyVenueStatistic(venueId: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('my_venue_statistic', {
+    venue_id: venueId,
+  })
+  if (error) throw error
+  return parseVenuePerformance(data)
+}
+
+export async function getCommunityVenueUsage(slug: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('community_venue_usage', {
+    slug,
+  })
+  if (error) throw error
+  return parseVenueUsage(data)
 }
 
 export async function getMeetupStatistics(meetupId: string) {

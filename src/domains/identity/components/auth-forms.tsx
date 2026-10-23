@@ -21,12 +21,15 @@ export function AuthCard({
   children: ReactNode
 }) {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-col px-6 py-10">
+    <main className="mx-auto grid w-full max-w-5xl gap-6 px-6 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+      <section className="rounded-3xl bg-ink px-6 py-8 text-ink-foreground">
+        <p className="text-sm font-semibold text-pitch">PaDre — Sports Club</p>
+        <h1 className="mt-3 text-4xl font-bold">{title}</h1>
+        <p className="mt-3 max-w-md text-lg">{description}</p>
+      </section>
       <Card>
         <CardHeader>
-          <CardTitle>
-            <h1 className="text-2xl">{title}</h1>
-          </CardTitle>
+          <CardTitle className="text-xl">Sua conta</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>

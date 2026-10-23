@@ -5,6 +5,7 @@ import {
   useOwnProfile,
   useUpdateOwnProfile,
 } from '@/domains/identity/api/queries.ts'
+import { PersonalDetailsForm } from '@/domains/identity/components/sports-identity.tsx'
 import { ProfileForm } from '@/domains/identity/components/profile-form.tsx'
 import { useSession } from '@/domains/identity/components/session.tsx'
 import {
@@ -56,6 +57,7 @@ export function EditProfilePage() {
           acesso.
         </p>
       </div>
+      <PersonalDetailsForm />
       <ProfileForm
         key={`${profileQuery.data.updatedAt}-${profileQuery.data.username}`}
         defaultValues={defaults}

@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 
 import { signUp } from '@/domains/identity/api/auth.ts'
+import { readPublicWebOrigin } from '@/shared/lib/env.ts'
 import {
   inviteAuthPath,
   inviteEmailRedirect,
@@ -25,7 +26,7 @@ export function SignupPage() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false)
   const mutation = useMutation({
     mutationFn: (input: Parameters<typeof signUp>[0]) =>
-      signUp(input, inviteEmailRedirect(window.location.origin, retorno)),
+      signUp(input, inviteEmailRedirect(readPublicWebOrigin(), retorno)),
     onSuccess: (result) => {
       if (result.session) {
         void navigate(retorno ?? '/perfil')

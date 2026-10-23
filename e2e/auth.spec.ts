@@ -16,7 +16,7 @@ test.describe('account', () => {
     await expect(
       page.getByRole('heading', { name: 'Meu perfil' }),
     ).toBeVisible()
-    await expect(page.getByText('Ana José')).toBeVisible()
+    await expect(page.getByText('Ana José').first()).toBeVisible()
     await expect(page.getByText('Privado', { exact: true })).toBeVisible()
 
     await page.reload()
@@ -28,12 +28,12 @@ test.describe('account', () => {
     await page.getByLabel('Nome', { exact: true }).fill('Ana Souza')
     await page.getByRole('radio', { name: 'Público' }).check()
     await page.getByLabel('Fuso horário').selectOption('America/Manaus')
-    await page.getByRole('button', { name: 'Salvar' }).click()
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click()
 
     await expect(
       page.getByRole('heading', { name: 'Meu perfil' }),
     ).toBeVisible()
-    await expect(page.getByText('Ana Souza')).toBeVisible()
+    await expect(page.getByText('Ana Souza').first()).toBeVisible()
     await expect(page.getByText('Público', { exact: true })).toBeVisible()
     await expect(page.getByText('America/Manaus')).toBeVisible()
 

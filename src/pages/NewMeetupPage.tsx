@@ -16,6 +16,10 @@ import {
   type MeetupDraft,
 } from '@/domains/meetups/model/meetup.ts'
 import { useCatalog } from '@/domains/sports/api/queries.ts'
+import {
+  useCommunityVenues,
+  useMyVenues,
+} from '@/domains/venues/api/queries.ts'
 
 export function NewMeetupPage() {
   const navigate = useNavigate()
@@ -27,11 +31,31 @@ export function NewMeetupPage() {
   const profile = useOwnProfile(session?.user.id)
   const create = useCreateMeetup()
   const createCommunity = useCreateCommunityMeetup(communitySlug)
+  const personalVenues = useMyVenues(!communitySlug)
+  const communityVenues = useCommunityVenues(
+    communitySlug,
+    Boolean(community.data?.myRole),
+  )
   const [error, setError] = useState('')
   const timeZone = profile.data?.timezone ?? 'America/Sao_Paulo'
+  const venueQuery = communitySlug ? communityVenues : personalVenues
+  const venues = (venueQuery.data ?? [])
+    .filter((venue) => venue.status === 'active')
+    .map((venue) => ({
+      id: venue.id,
+      name: venue.name,
+      address: venue.address,
+      details: venue.details,
+      latitude: venue.latitude,
+      longitude: venue.longitude,
+    }))
+  const venuesLoading = communitySlug
+    ? Boolean(community.data?.myRole) && communityVenues.isPending
+    : personalVenues.isPending
   const waiting =
     catalog.isPending ||
     profile.isPending ||
+    venuesLoading ||
     (communitySlug.length > 0 && community.isPending)
   const communitySports =
     catalog.data?.filter((sport) =>
@@ -55,7 +79,7 @@ export function NewMeetupPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Novo encontro</h1>
         <p className="text-muted-foreground">
@@ -92,6 +116,7 @@ export function NewMeetupPage() {
       {catalog.data && !waiting && canWrite ? (
         <MeetupForm
           sports={sports}
+          venues={venues}
           initial={{
             ...defaultMeetupFormValues(timeZone),
             sportId: sports[0]?.id ?? '',

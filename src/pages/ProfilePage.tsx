@@ -1,8 +1,10 @@
 import { Link } from 'react-router'
 
+import { SportsIdentity } from '@/domains/identity/components/sports-identity.tsx'
 import { useOwnProfile } from '@/domains/identity/api/queries.ts'
 import { useMyStatistics } from '@/domains/statistics/api/queries.ts'
 import { PerformanceSection } from '@/domains/statistics/components/performance-section.tsx'
+import { VenuePerformanceComparison } from '@/domains/statistics/components/venue-performance.tsx'
 import { RelationshipsSection } from '@/domains/statistics/components/relationships-section.tsx'
 import { useSession } from '@/domains/identity/components/session.tsx'
 import {
@@ -48,11 +50,23 @@ export function ProfilePage() {
   const profile = profileQuery.data
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Meu perfil</h1>
-          <p className="text-sm text-muted-foreground">{session?.user.email}</p>
+        <div className="flex items-center gap-4">
+          <span
+            aria-hidden="true"
+            className="inline-flex size-16 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground"
+          >
+            {profile.displayName.slice(0, 1).toUpperCase()}
+          </span>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl font-semibold tracking-tight">
+              Meu perfil
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {session?.user.email}
+            </p>
+          </div>
         </div>
         <Link to="/perfil/editar" className={buttonClassName('primary')}>
           Editar perfil
@@ -82,6 +96,11 @@ export function ProfilePage() {
           </dl>
         </CardContent>
       </Card>
+      <SportsIdentity
+        displayName={profile.displayName}
+        username={profile.username}
+        sports={statistics.data?.sports.map((sport) => sport.sport_name) ?? []}
+      />
       <PerformanceSection
         title="Desempenho esportivo"
         loading={statistics.isPending}
@@ -90,6 +109,7 @@ export function ProfilePage() {
         empty="Você ainda não tem partidas confirmadas."
         note="Calculado a partir das partidas confirmadas. O número não é editável."
       />
+      <VenuePerformanceComparison sports={statistics.data?.sports} />
       <RelationshipsSection
         loading={statistics.isPending}
         error={statistics.isError ? statistics.error : null}

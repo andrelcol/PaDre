@@ -55,18 +55,18 @@ test('members vote, change, close and moderate community polls', async ({
     const sportA = pollArticle(pageA!, sportQuestion)
     await expect(sportA.getByText('Ninguém votou.')).toBeVisible()
 
-    await pageB!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await reloadPolls(pageB!)
     await vote(pageB!, sportQuestion, 'Vôlei')
-    await pageC!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await reloadPolls(pageC!)
     await vote(pageC!, sportQuestion, 'Beach tennis')
-    await pageA!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await reloadPolls(pageA!)
     await expect(pollArticle(pageA!, sportQuestion)).toContainText('1 voto')
     await expect(pollArticle(pageA!, sportQuestion)).toContainText(
       '2 pessoas votaram.',
     )
 
     await changeVote(pageC!, sportQuestion, 'Vôlei')
-    await pageA!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await reloadPolls(pageA!)
     await expect(pollArticle(pageA!, sportQuestion)).toContainText(
       'Vôlei: 2 votos',
     )
@@ -81,8 +81,8 @@ test('members vote, change, close and moderate community polls', async ({
       .getByRole('button', { name: 'Confirmar encerramento' })
       .click()
     await expect(pageA!.getByText('Enquete encerrada.')).toBeVisible()
-    await pageB!.getByRole('button', { name: 'Recarregar enquetes' }).click()
-    await pageB!.getByRole('button', { name: 'Encerradas' }).click()
+    await reloadPolls(pageB!)
+    await showPolls(pageB!, 'Encerradas')
     const closed = pollArticle(pageB!, sportQuestion)
     await expect(closed).toContainText('Encerrada')
     await expect(
@@ -91,12 +91,12 @@ test('members vote, change, close and moderate community polls', async ({
     await expect(closed).toContainText('Mais votada: Vôlei.')
 
     await publishSchedulePoll(pageB!, timeQuestion)
-    await pageA!.getByRole('button', { name: 'Abertas' }).click()
-    await pageA!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await showPolls(pageA!, 'Abertas')
+    await reloadPolls(pageA!)
     await voteMany(pageA!, timeQuestion, ['Sábado 9h', 'Sábado 11h'])
-    await pageC!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await reloadPolls(pageC!)
     await voteMany(pageC!, timeQuestion, ['Sábado 16h'])
-    await pageA!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await reloadPolls(pageA!)
     const times = pollArticle(pageA!, timeQuestion)
     await expect(times).toContainText('Sábado 9h: 1 voto (50%)')
     await expect(times).toContainText('Sábado 11h: 1 voto (50%)')
@@ -104,8 +104,8 @@ test('members vote, change, close and moderate community polls', async ({
     await expect(times).toContainText('soma pode passar de 100%')
 
     await publishGeneralPoll(pageA!, cancelQuestion, ['Sim', 'Não'])
-    await pageB!.getByRole('button', { name: 'Abertas' }).click()
-    await pageB!.getByRole('button', { name: 'Recarregar enquetes' }).click()
+    await showPolls(pageB!, 'Abertas')
+    await reloadPolls(pageB!)
     await pollArticle(pageB!, cancelQuestion)
       .getByRole('button', { name: 'Cancelar enquete' })
       .click()
@@ -113,7 +113,7 @@ test('members vote, change, close and moderate community polls', async ({
       .getByRole('button', { name: 'Confirmar cancelamento' })
       .click()
     await expect(pageB!.getByText('Enquete cancelada.')).toBeVisible()
-    await pageA!.getByRole('button', { name: 'Canceladas' }).click()
+    await showPolls(pageA!, 'Canceladas')
     await expect(pollArticle(pageA!, cancelQuestion)).toContainText(
       'não vale como decisão do grupo',
     )
@@ -143,7 +143,6 @@ test('records a mobile walkthrough of community polls', async ({ browser }) => {
   const context = await browser.newContext({
     viewport: mobile,
     recordVideo: { dir: 'demo/polls', size: mobile },
-    slowMo: 350,
   })
   const page = await context.newPage()
   try {
@@ -172,6 +171,7 @@ test('records a mobile walkthrough of community polls', async ({ browser }) => {
 
     await login(page, ana)
     await page.goto(path)
+    await openPolls(page)
     await expect(pollArticle(page, question)).toContainText('Vôlei: 2 votos')
     await page.waitForTimeout(1500)
     await pollArticle(page, question)
@@ -180,7 +180,7 @@ test('records a mobile walkthrough of community polls', async ({ browser }) => {
     await pollArticle(page, question)
       .getByRole('button', { name: 'Confirmar encerramento' })
       .click()
-    await page.getByRole('button', { name: 'Encerradas' }).click()
+    await showPolls(page, 'Encerradas')
     await expect(pollArticle(page, question)).toContainText(
       'Mais votada: Vôlei.',
     )
@@ -194,7 +194,28 @@ function pollArticle(page: Page, question: string) {
   return page.getByRole('article').filter({ hasText: question })
 }
 
+async function openPolls(page: Page) {
+  const tab = page.getByRole('tab', { name: 'Enquetes' })
+  if ((await tab.getAttribute('aria-selected')) !== 'true') {
+    await tab.click()
+  }
+}
+
+async function reloadPolls(page: Page) {
+  await openPolls(page)
+  await page.getByRole('button', { name: 'Recarregar enquetes' }).click()
+}
+
+async function showPolls(
+  page: Page,
+  filter: 'Abertas' | 'Encerradas' | 'Canceladas',
+) {
+  await openPolls(page)
+  await page.getByRole('button', { name: filter }).click()
+}
+
 async function vote(page: Page, question: string, choice: string) {
+  await openPolls(page)
   const article = pollArticle(page, question)
   await article.getByRole('radio', { name: choice, exact: true }).check()
   await article.getByRole('button', { name: 'Salvar voto' }).click()
@@ -202,6 +223,7 @@ async function vote(page: Page, question: string, choice: string) {
 }
 
 async function changeVote(page: Page, question: string, choice: string) {
+  await openPolls(page)
   const article = pollArticle(page, question)
   await article.getByRole('radio', { name: choice, exact: true }).check()
   await article.getByRole('button', { name: 'Salvar voto' }).click()
@@ -209,6 +231,7 @@ async function changeVote(page: Page, question: string, choice: string) {
 }
 
 async function voteMany(page: Page, question: string, choices: string[]) {
+  await openPolls(page)
   const article = pollArticle(page, question)
   for (const choice of choices) {
     await article.getByRole('checkbox', { name: choice, exact: true }).check()
@@ -218,6 +241,7 @@ async function voteMany(page: Page, question: string, choices: string[]) {
 }
 
 async function publishSportPoll(page: Page, question: string) {
+  await openPolls(page)
   await page.getByRole('button', { name: 'Nova enquete' }).click()
   await page.getByLabel('Pergunta').fill(question)
   await page.getByLabel('Categoria').selectOption({ label: 'Modalidade' })
@@ -233,6 +257,7 @@ async function publishSportPoll(page: Page, question: string) {
 }
 
 async function publishSchedulePoll(page: Page, question: string) {
+  await openPolls(page)
   await page.getByRole('button', { name: 'Nova enquete' }).click()
   await page.getByLabel('Pergunta').fill(question)
   await page.getByLabel('Categoria').selectOption({ label: 'Horário' })
@@ -257,6 +282,7 @@ async function publishGeneralPoll(
   question: string,
   choices: [string, string],
 ) {
+  await openPolls(page)
   await page.getByRole('button', { name: 'Nova enquete' }).click()
   await page.getByLabel('Pergunta').fill(question)
   await page

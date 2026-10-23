@@ -17,7 +17,7 @@ export function NewCommunityPage() {
   }))
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">
           Nova comunidade

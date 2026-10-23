@@ -30,7 +30,7 @@ Fora: bloqueio, visibilidade `friends`, comunidades e convite de encontro. O blo
 
 Entregue: encontro privado, horário em `timestamptz` com fuso IANA, local em texto, capacidade com trava transacional e convite entre amigos.
 
-Fora ainda: PostGIS, mapa, visibilidade pública e estado `completed`. Partida e comunidade continuam nas fases seguintes.
+Fora desta fase: PostGIS, visibilidade pública e estado `completed`. O mapa dos pontos informados entrou na fase 11.
 
 ## Fase 5 — Convites
 
@@ -52,9 +52,11 @@ Entregue: uma contribuição por jogador escalado em cada partida confirmada, ge
 
 Entregue também: companheiros, adversários e confronto direto calculados dessas contribuições, por modalidade e formato. Melhor companheiro e adversário mais difícil exigem cinco partidas. O reprocessamento completo remove contribuição de partida que deixou de estar confirmada.
 
-Ainda fora: desempenho por local e ranking.
+Entregue depois, na fase dos locais: desempenho pessoal por `venue_id` e utilização agregada do local comunitário, sem ranking.
 
-Pronto quando: reprocessar do zero reproduz os mesmos números e nenhuma tela grava contador próprio. Esse critério vale para a leitura individual e para as relações. O desempenho por local continua pendente.
+Ainda fora: ranking.
+
+Pronto quando: reprocessar do zero reproduz os mesmos números e nenhuma tela grava contador próprio. Esse critério vale para a leitura individual, para as relações e para o agrupamento por local.
 
 ## Fase 8 — Comunidades
 
@@ -76,15 +78,43 @@ Fora ainda: Realtime, chat do encontro, mensagem direta, anexo, reação, respos
 
 Pronto quando: quem não participa não lê mensagens nem enquetes pelas funções do banco.
 
-## Fase 10 — Rankings e mapa
+## Fase 10 — Locais reutilizáveis
 
-Objetivo: ranking derivado das projeções e mapa com MapLibre sobre os pontos dos locais.
+Entregue: cadastro pessoal em `/locais` e cadastro da comunidade para proprietário e administrador. Integrante consulta e escolhe o local ativo ao propor encontro. O encontro guarda `venue_id` e uma cópia do nome, endereço e detalhes. Texto manual continua. Arquivar tira o local da seleção nova e deixa o histórico. A lista de encontros do local respeita a leitura que o encontro já tinha.
 
-Dependências: estatísticas e locais.
+Entregue também: desempenho pessoal por `venue_id` e utilização agregada dos locais da comunidade. A fonte é a contribuição já confirmada. Não há ranking de jogador.
 
-Pronto quando: o ranking muda ao reprocessar uma partida, e o mapa mostra o local do encontro.
+Fora ainda: geocodificação, PostGIS, autocomplete, catálogo global e vínculo da opção de enquete com `venue_id`.
 
-## Fase 11 — Transporte
+Pronto quando: outro usuário não lê o catálogo pessoal e quem não participa não lê o endereço da comunidade.
+
+## Fase 11 — Mapa dos locais
+
+Entregue: mapa pessoal e da comunidade, marcação explícita da posição, registro único em local que ainda não tinha ponto, snapshot geográfico do encontro, links externos de navegação e localização opcional do aparelho. O tema claro usa o estilo Liberty e o escuro usa o estilo Dark, ambos do OpenFreeMap.
+
+Fora ainda: ranking, geocodificação, PostGIS, rota interna e transporte.
+
+Pronto quando: o mapa só mostra ponto informado por quem pode ver o local, e mudar o cadastro depois não reescreve o encontro.
+
+## Perfil esportivo e cartinhas
+
+Entregue: altura e sexo opcionais, fora da leitura antiga de `profiles`, com exibição desligada por padrão. A foto tem validação de JPEG, PNG e WebP, mas o envio fica indisponível porque o supervisor local não tem Storage.
+
+Entregue também: cartinha por comunidade, com 3 a 8 atributos versionados, participação voluntária, nota de 1 a 99 e overall calculado no Postgres como média das médias. A amostra mínima é 3 avaliadores por atributo. A nota individual não sai da função de lista.
+
+Fora: ranking global, cartinha por modalidade, pacote, raridade e nota automática a partir da partida.
+
+Pronto quando: quem não participa não lê a cartinha e uma versão nova não reinterpreta voto antigo.
+
+## Fase 12 — Rankings
+
+Objetivo: ranking derivado das projeções, sem número mantido à mão.
+
+Dependências: estatísticas.
+
+Pronto quando: o ranking muda ao reprocessar uma partida.
+
+## Fase 13 — Transporte
 
 Objetivo: consultar transporte público até o local.
 

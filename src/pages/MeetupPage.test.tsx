@@ -32,6 +32,7 @@ vi.mock('@/domains/meetups/api/meetups.ts', () => ({
   listMeetups: vi.fn(),
   createMeetup: vi.fn(),
   updateMeetup: vi.fn(),
+  setMeetupPlace: vi.fn(),
   cancelMeetup,
   inviteToMeetup: vi.fn(),
   respondToMeetupInvitation,
@@ -67,6 +68,16 @@ vi.mock('@/domains/statistics/api/statistics.ts', () => ({
   })),
 }))
 
+vi.mock('@/domains/venues/api/venues.ts', () => ({
+  listMyVenues: vi.fn(async () => []),
+  listCommunityVenues: vi.fn(async () => []),
+  listVenueMeetups: vi.fn(async () => ({ meetups: [], total: 0 })),
+  createVenue: vi.fn(),
+  updateVenue: vi.fn(),
+  archiveVenue: vi.fn(),
+  setVenueLocation: vi.fn(),
+}))
+
 vi.mock('@/domains/matches/api/matches.ts', () => ({
   listMeetupMatches: vi.fn(async () => ({ roster: [], matches: [] })),
   createMatch: vi.fn(),
@@ -89,6 +100,10 @@ const detail: MeetupDetail = {
   timeZone: 'America/Sao_Paulo',
   locationName: 'Clube',
   locationAddress: '',
+  locationDetails: '',
+  locationLatitude: null,
+  locationLongitude: null,
+  venueId: null,
   maxParticipants: 2,
   confirmedCount: 1,
   openSpots: 1,
@@ -176,7 +191,7 @@ describe('MeetupPage', () => {
     expect(
       await screen.findByRole('heading', { name: 'Vôlei na quadra' }),
     ).toBeVisible()
-    expect(screen.getByText(/1 vaga disponível/)).toBeVisible()
+    expect(screen.getAllByText(/1 vaga disponível/).length).toBeGreaterThan(0)
     expect(
       screen.getByRole('list', { name: 'Participantes confirmados' }),
     ).toHaveTextContent('ana')

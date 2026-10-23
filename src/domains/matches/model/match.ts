@@ -226,6 +226,50 @@ export function describeScore(rule: ScoringSnapshot, payload: unknown) {
     .join(', ')
 }
 
+export function scoreLines(rule: ScoringSnapshot, payload: unknown) {
+  if (rule.rule_type === 'set_based') {
+    const parsed = setBasedResultSchema.safeParse(payload)
+    if (!parsed.success) return []
+    return parsed.data.sets.map(([left, right], index) => ({
+      label: `Set ${index + 1}`,
+      left: String(left),
+      right: String(right),
+    }))
+  }
+
+  if (rule.rule_type === 'goal_based') {
+    const parsed = goalBasedResultSchema.safeParse(payload)
+    if (!parsed.success) return []
+    return [
+      {
+        label: 'Gols',
+        left: String(parsed.data.goals[0]),
+        right: String(parsed.data.goals[1]),
+      },
+    ]
+  }
+
+  const parsed = gameBasedResultSchema.safeParse(payload)
+  if (!parsed.success) return []
+  return parsed.data.sets.map((set, index) => {
+    if ('points' in set) {
+      return {
+        label: `Set ${index + 1}`,
+        left: String(set.points[0]),
+        right: String(set.points[1]),
+      }
+    }
+    const tiebreak = set.tiebreak
+      ? ` · tiebreak ${set.tiebreak[0]}–${set.tiebreak[1]}`
+      : ''
+    return {
+      label: `Set ${index + 1}${tiebreak}`,
+      left: String(set.games[0]),
+      right: String(set.games[1]),
+    }
+  })
+}
+
 export function confirmedSides(match: MatchRecord) {
   const sides = new Map(match.teams.map((team) => [team.id, team.side]))
   return new Set(

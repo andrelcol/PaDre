@@ -1,6 +1,6 @@
 # Arquitetura
 
-PaDre é uma aplicação web de página única apoiada em Supabase. O cliente React organiza a interface e as regras puras. PostgreSQL, com Row Level Security, é a fronteira de autorização e a fonte dos dados confirmados.
+PaDre é uma aplicação web de página única apoiada em Supabase. O cliente React organiza a interface e as regras puras. PostgreSQL, com Row Level Security, é a fronteira de autorização e a fonte dos dados confirmados. A navegação e os tokens visuais estão em [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md). As rotas pesadas carregam sob demanda.
 
 Nada disso está ligado a um projeto Supabase remoto. Identidade, catálogo, amizades, encontros, partidas, estatísticas e comunidades já têm migration versionada. O restante do esquema entra quando a fase correspondente for a base da etapa.
 
@@ -26,26 +26,27 @@ Estado de servidor fica no TanStack Query. Zod valida o que cruza a borda: formu
 
 ## Domínios
 
-| Domínio       | Responsabilidade                                    | Não é                      |
-| ------------- | --------------------------------------------------- | -------------------------- |
-| `identity`    | Perfil, fuso e privacidade                          | Amizade                    |
-| `friendships` | Pedido, aceite e bloqueio entre duas pessoas        | Vaga em comunidade         |
-| `communities` | Grupo, papéis e administradores                     | O encontro em si           |
-| `meetups`     | Encontro, horário, local e confirmação de presença  | Partida                    |
-| `invites`     | Convite direto e link, com prazo e token            | A lista de participantes   |
-| `sports`      | Modalidade, formato e regra de pontuação versionada | Resultado de uma partida   |
-| `matches`     | Partida, lados, atletas e resultado confirmado      | Estatística acumulada      |
-| `statistics`  | Projeções reprocessáveis a partir de resultados     | Fonte de verdade           |
-| `places`      | Local com ponto geográfico                          | Mapa ou transporte         |
-| `messaging`   | Chat e enquetes de encontro ou comunidade           | Comentário solto no perfil |
-| `rankings`    | Ordenação derivada das projeções, num escopo        | Número mantido à mão       |
+| Domínio       | Responsabilidade                                      | Não é                      |
+| ------------- | ----------------------------------------------------- | -------------------------- |
+| `identity`    | Perfil, fuso, privacidade e detalhe pessoal opcional  | Amizade                    |
+| `friendships` | Pedido, aceite e bloqueio entre duas pessoas          | Vaga em comunidade         |
+| `communities` | Grupo, papéis e administradores                       | O encontro em si           |
+| `meetups`     | Encontro, horário, local e confirmação de presença    | Partida                    |
+| `invites`     | Convite direto e link, com prazo e token              | A lista de participantes   |
+| `sports`      | Modalidade, formato e regra de pontuação versionada   | Resultado de uma partida   |
+| `matches`     | Partida, lados, atletas e resultado confirmado        | Estatística acumulada      |
+| `statistics`  | Projeções reprocessáveis a partir de resultados       | Fonte de verdade           |
+| `places`      | Local pessoal ou da comunidade, com cópia no encontro | Transporte                 |
+| `maps`        | Mapa, marcador e link externo a partir de um ponto    | Geocodificação ou rota     |
+| `messaging`   | Chat e enquetes de encontro ou comunidade             | Comentário solto no perfil |
+| `rankings`    | Ordenação derivada das projeções, num escopo          | Número mantido à mão       |
 
 `meetups.community_id` é opcional. Nulo é encontro privado. Preenchido associa o encontro a uma comunidade e não muda depois. Apagar a comunidade não apaga o encontro. Partida pertence a um encontro. Ranking e transporte não ganham tabela própria até as fases que os implementam.
 
 ## Backend
 
 - Supabase Auth identifica a pessoa. `profiles` completa o que o Auth não modela, com o mesmo UUID.
-- PostgreSQL guarda o domínio. PostGIS entra na migration de locais (`geography(Point, 4326)`), não antes.
+- PostgreSQL guarda o domínio. O local já existe em `venues`, com latitude e longitude opcionais. O mapa lê esse par. PostGIS não está instalado.
 - O chat e as enquetes da comunidade atualizam a cada 15 segundos enquanto a página está visível. Realtime continua fora.
 - A chave `anon` pode ir para o cliente. A `service_role` não vai. Ela não autoriza leitura; as políticas autorizam.
 - Mudança de esquema só por arquivo em `supabase/migrations`, na ordem, aplicado primeiro num Supabase local.
@@ -132,7 +133,7 @@ Estados que contam: partida `confirmed` com a revisão vigente do resultado. Ras
 
 `private.confirm_match` chama `private.project_match_statistics` na mesma transação, depois de gravar `confirmed`. Se a projeção falhar, a confirmação volta atrás. A função trava a partida, substitui as linhas daquela partida e apaga quem saiu da escalação. Partida que não está `confirmed` perde as contribuições. Reprocessar uma pessoa ou o histórico inteiro chama a mesma função, só como `postgres`. Não há tabela agregada: `my_statistics` e `meetup_participant_statistics` somam as contribuições.
 
-A leitura individual agrupa por modalidade e, dentro dela, por formato. Companheiro e adversário saem da mesma contribuição, cruzada com o lado em `match_teams`. Não há tabela de dupla. O destaque de melhor companheiro e de adversário mais difícil exige cinco partidas na modalidade escolhida. O local do encontro continua fora. O cálculo está em [STATISTICS.md](./STATISTICS.md).
+A leitura individual agrupa por modalidade e, dentro dela, por formato. Companheiro e adversário saem da mesma contribuição, cruzada com o lado em `match_teams`. Não há tabela de dupla. O destaque de melhor companheiro e de adversário mais difícil exige cinco partidas na modalidade escolhida. O desempenho por local soma as mesmas contribuições pelo `venue_id` do encontro. `my_venue_statistics` é pessoal. `community_venue_usage` é agregado e exige integrante ativo. O cálculo está em [STATISTICS.md](./STATISTICS.md).
 
 ## Tempo
 
@@ -142,9 +143,13 @@ Instantes em `timestamptz`. Perfil e encontro guardam um nome de fuso IANA. A te
 
 O link de encontro carrega 32 bytes aleatórios, em base64url. O banco guarda o SHA-256. O token cru volta só na geração e a tela não consegue mostrá-lo de novo depois de recarregar. A validade é o menor prazo entre sete dias e o início do encontro. Há um link não revogado por encontro; gerar outro revoga o anterior. Quem já confirmou permanece. O resgate não cria amizade e não reabre quem saiu. O cadastro volta para `/convite/:token` e a vaga só entra num clique explícito.
 
+## Android
+
+O mesmo cliente React vai para a web e para o Android. Capacitor empacota `dist` no projeto `android/`. O identificador de desenvolvimento é `com.padre.sportsclub.dev`. Sessão, encontros, comunidades, mapas, estatísticas por local e cartinhas não têm uma segunda implementação. Diferenças de endereço, botão voltar, teclado e localização ficam em `src/shared/platform/`. O detalhe está em [ANDROID.md](./ANDROID.md). O supervisor local não inclui Storage; o envio de foto recusa até essa peça existir.
+
 ## Mapas e transporte
 
-MapLibre consome os pontos quando a fase de mapa chegar. Transporte público, mais à frente, lê a coordenada do local por um serviço externo. O núcleo de encontros não depende desse serviço.
+MapLibre mostra os pontos já gravados, com o estilo claro ou escuro do OpenFreeMap. O encontro guarda a própria cópia da posição. Transporte público continua fora e o núcleo de encontros não depende dele. O detalhe está em [MAPS.md](./MAPS.md).
 
 ## Qualidade
 
@@ -160,4 +165,4 @@ TypeScript `strict`. ESLint e Prettier no código. Vitest e Testing Library nas 
 
 ## Fora desta etapa
 
-Mapa, desempenho por local, ranking e Realtime continuam de fora. O chat coletivo e a enquete da comunidade já existem. A identidade local — conta, sessão e perfil — está descrita em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
+Ranking e Realtime continuam de fora. O chat coletivo, a enquete, o cadastro de locais, o mapa dos pontos informados, o desempenho por local e as cartinhas da comunidade já existem. A identidade local — conta, sessão e perfil — está descrita em [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md). O local reutilizável está em [VENUES.md](./VENUES.md). O mapa está em [MAPS.md](./MAPS.md). A cartinha está em [PLAYER_CARDS.md](./PLAYER_CARDS.md).

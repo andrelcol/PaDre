@@ -1,18 +1,49 @@
 import { useQuery } from '@tanstack/react-query'
 
 import {
+  getCommunityVenueUsage,
   getMeetupRelationships,
   getMeetupStatistics,
   getMyOpponents,
   getMyRelationshipHighlights,
   getMyStatistics,
   getMyTeammates,
+  getMyVenueStatistic,
+  getMyVenueStatistics,
 } from '@/domains/statistics/api/statistics.ts'
 
 export function useMyStatistics(enabled: boolean) {
   return useQuery({
     queryKey: ['statistics', 'me'],
     queryFn: getMyStatistics,
+    enabled,
+  })
+}
+
+export function useMyVenueStatistics(
+  sportId: string | null,
+  sportFormatId: string | null,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ['statistics', 'venues', sportId, sportFormatId],
+    queryFn: () => getMyVenueStatistics(sportId, sportFormatId),
+    enabled,
+  })
+}
+
+export function useMyVenueStatistic(venueId: string | null) {
+  return useQuery({
+    queryKey: ['statistics', 'venue', venueId],
+    queryFn: () => getMyVenueStatistic(venueId ?? ''),
+    enabled: Boolean(venueId),
+  })
+}
+
+export function useCommunityVenueUsage(slug: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['statistics', 'venue-usage', slug],
+    queryFn: () => getCommunityVenueUsage(slug),
     enabled,
   })
 }

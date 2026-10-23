@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { SessionStateProvider } from '@/domains/identity/components/session.tsx'
 import type { CatalogSport } from '@/domains/sports/model/catalog.ts'
 import { HomePage } from './HomePage.tsx'
 
@@ -46,7 +48,11 @@ function renderHome() {
   })
   render(
     <QueryClientProvider client={queryClient}>
-      <HomePage />
+      <SessionStateProvider value={{ session: null, loading: false }}>
+        <MemoryRouter>
+          <HomePage />
+        </MemoryRouter>
+      </SessionStateProvider>
     </QueryClientProvider>,
   )
 }
@@ -70,9 +76,7 @@ describe('HomePage', () => {
       await screen.findByRole('button', { name: /Vôlei de areia/ }),
     ).toBeVisible()
     expect(screen.getByRole('button', { name: /Futevôlei/ })).toBeVisible()
-    expect(
-      screen.getByText('Partidas entram nas próximas etapas.'),
-    ).toBeVisible()
+    expect(screen.getByText(/Organize encontros presenciais/)).toBeVisible()
   })
 
   it('shows an error when the catalog request fails', async () => {

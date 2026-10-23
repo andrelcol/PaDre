@@ -575,6 +575,10 @@ describe('meetups', () => {
         '20261019140000_historical_delete_guard.sql',
         '20261019180000_community_messages.sql',
         '20261019200000_community_polls.sql',
+        '20261019220000_venues.sql',
+        '20261019230000_venue_locations.sql',
+        '20261019240000_venue_statistics.sql',
+        '20261019250000_profile_details_and_player_cards.sql',
       ]) {
         await clean.query(
           readFileSync(
@@ -603,6 +607,10 @@ describe('meetups', () => {
            and column_name = 'community_id'`,
       )
       expect(communityMeetup.rows).toHaveLength(1)
+      const venues = await clean.query(
+        `select to_regclass('public.venues') as venues`,
+      )
+      expect(venues.rows[0]?.venues).toBe('venues')
     } finally {
       await clean.end()
       await admin(async (client) => {

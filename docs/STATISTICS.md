@@ -147,6 +147,26 @@ Escalação que só existia em `draft` ainda sai com a conta. Isso não altera p
 
 A trava não é o encerramento da conta. Enquanto ela durar, o username permanece porque o fato ainda aponta para `profiles`. O passo seguinte é um participante histórico sem identificação, mais uma política de retenção, para a estatística de quem ficou continuar verdadeira sem guardar o dado pessoal. Até lá, a conta com histórico não é excluída. A decisão está na ADR-029.
 
+## Desempenho por local
+
+A identidade é `meetups.venue_id`. A consulta junta `match_player_statistics` com `matches` e `meetups`. O `join` exige `matches.status = 'confirmed'`, além da contribuição já existir só nesse estado. `draft`, `pending_confirmation`, `disputed` e `voided` ficam de fora. O nome, o endereço e o snapshot do encontro não agrupam nada. Dois cadastros com o mesmo nome continuam separados. `venue_id` nulo vai para o grupo informativo “Sem local cadastrado”, que não abre um local.
+
+Cada pessoa conta uma vez por partida, pela chave `(match_id, user_id)`. Várias partidas no mesmo encontro contam separado. A taxa continua `vitórias / partidas * 100`, com empate no denominador e `round(..., 1)` só na leitura. Sem partida naquele recorte, o grupo não aparece.
+
+As métricas são as colunas já gravadas. `set_based` soma pontos e sets. `goal_based` soma gols e empates. `game_based` soma sets, games e, à parte, `deciding_points`. Unidades diferentes não se somam. O filtro é `sport_id` e, se vier, `sport_format_id` desse esporte. Formato de outra modalidade é recusado. Não há filtro por período: a data esportiva seria `meetups.starts_at`, não o instante do processamento, e fica para uma etapa própria.
+
+Arquivar o local não apaga contribuição nem muda `venue_id`. Renomear o cadastro não altera o snapshot do encontro. Reprocessar chama a mesma `project_match_statistics` e não duplica linha.
+
+`my_venue_statistics` e `my_venue_statistic` usam `auth.uid()`. Não recebem o id de outra pessoa. A resposta não traz partida, escalação, e-mail nem preferência. O nome, o endereço e a coordenada só entram se a pessoa é a dona do local pessoal ou integrante ativa do local comunitário. Se ela jogou ali e perdeu essa leitura, a linha volta com `visible: false` e só o UUID e os próprios números. Ser dono do local não mostra a partida de outra pessoa. A lista devolve no máximo 100 locais.
+
+`community_venue_usage` exige participação ativa, inclusive em comunidade pública. Conta encontros `scheduled`, encontros `cancelled`, encontros distintos com partida confirmada e partidas confirmadas distintas. Uma partida 2x2 é uma partida. O encontro cancelado depois não apaga a partida que já estava confirmada, e os dois números ficam separados. Não há ranking de jogador.
+
+A comparação na tela usa a mesma modalidade e o mesmo formato. O destaque de maior aproveitamento exige ao menos dois locais com cinco partidas e uma taxa estritamente maior. Amostra menor continua na lista, marcada como pequena. Não há Elo.
+
+O mapa pede `my_venue_statistic` só do marcador escolhido. A web e o Android usam os mesmos componentes.
+
+Não há tabela de totais. Os índices atuais de usuário, partida, encontro e `venue_id` cobrem a junção. Se o volume crescer, a projeção seguinte pode ser por `(user_id, venue_id, sport_id)`, regravada por `project_match_statistics`.
+
 ## Limites desta fase
 
-Não há ranking, desempenho por local, estatística de dupla fixa nem filtro por período. A privacidade da relação ainda é a participação confirmada no encontro, sem configuração por pessoa. Pontos de tiebreak de games não são armazenados; apenas ficam de fora da contagem de games.
+Não há ranking, estatística de dupla fixa nem filtro por período. A privacidade da relação ainda é a participação confirmada no encontro, sem configuração por pessoa. Pontos de tiebreak de games não são armazenados; apenas ficam de fora da contagem de games.

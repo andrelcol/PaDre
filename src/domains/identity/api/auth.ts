@@ -5,6 +5,7 @@ import type {
   LoginInput,
 } from '@/domains/identity/model/profile.ts'
 import { toAuthError } from '@/domains/identity/api/errors.ts'
+import { readPublicWebOrigin } from '@/shared/lib/env.ts'
 import { requireSupabase } from '@/shared/lib/supabase.ts'
 
 export async function signUp(input: SignupInput, emailRedirectTo?: string) {
@@ -51,7 +52,7 @@ export async function signIn(input: LoginInput) {
 export async function requestPasswordRecovery(input: RecoverInput) {
   const supabase = requireSupabase()
   const { error } = await supabase.auth.resetPasswordForEmail(input.email, {
-    redirectTo: `${window.location.origin}/redefinir-senha`,
+    redirectTo: `${readPublicWebOrigin()}/redefinir-senha`,
   })
 
   if (error) throw toAuthError(error)

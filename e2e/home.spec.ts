@@ -14,7 +14,5 @@ test('home page shows the product and the opening sports', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: 'Beach tennis individual' }),
   ).toBeVisible()
-  await expect(
-    page.getByText('Partidas entram nas próximas etapas.'),
-  ).toBeVisible()
+  await expect(page.getByText(/Organize encontros presenciais/)).toBeVisible()
 })

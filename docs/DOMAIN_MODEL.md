@@ -22,7 +22,7 @@ Implementado agora:
 - `visibility`: `private` ou `public`, padrão `private`
 - `time_zone` IANA em `profile_preferences`, visível só para o próprio usuário
 
-Ainda não entram avatar, bio, nem visibilidade `friends`. Histórico e estatísticas também não têm coluna nesta fase. A leitura de um perfil público exige autenticação. Preferências não saem nessa leitura.
+Bio e visibilidade `friends` ainda não entram. Altura, sexo e a chave da foto ficam em `profile_personal_details`, não em `profiles`. A leitura pública antiga do perfil não devolve esses campos. Outra pessoa só os vê com perfil público e flag próprio. A foto ainda não tem arquivo persistido: o ambiente local não tem Storage. A leitura de um perfil público exige autenticação. Preferências não saem nessa leitura.
 
 Padrão anterior, perfil público e histórico visível para amigos, foi adiado. A revisão está na [ADR-017](./DECISIONS.md). Amizade confirmada não abre o perfil privado. A exceção está na [ADR-020](./DECISIONS.md).
 
@@ -101,7 +101,7 @@ Para incluir outra modalidade, outra variante ou outra versão, a mudança é um
 
 Implementado em `meetups`, `meetup_participants` e `meetup_invitations`. O domínio da arquitetura continua `meetups`; a rota de produto é `/encontros`. A decisão está na [ADR-022](./DECISIONS.md).
 
-`Meetup` guarda o organizador, o formato do catálogo e a `scoring_rule_versions.id` escolhida na criação. A modalidade sai do formato. O instante fica em `starts_at` e `ends_at` (`timestamptz`). `time_zone` é um nome IANA e só serve para mostrar o horário. O local desta fase é texto: `location_name` e `location_address`. Não há ponto geográfico ainda.
+`Meetup` guarda o organizador, o formato do catálogo e a `scoring_rule_versions.id` escolhida na criação. A modalidade sai do formato. O instante fica em `starts_at` e `ends_at` (`timestamptz`). `time_zone` é um nome IANA e só serve para mostrar o horário. O local visto no encontro é a cópia `location_name`, `location_address` e `location_details`. `venue_id` aponta para o cadastro quando a pessoa escolheu um local; nulo é texto manual. A cópia não acompanha uma edição posterior do cadastro.
 
 Estados do encontro: `scheduled` e `cancelled`. `completed` entra numa migration futura, quando houver fechamento de presença, e não será preenchido por um relógio automático.
 
@@ -109,7 +109,9 @@ A capacidade inclui quem organiza, vai de 2 a 64 e conta só participantes `conf
 
 `MeetupInvitation` é um convite para uma conta já cadastrada e amiga. Estados: `pending`, `accepted`, `declined`, `cancelled`. Pendente não ocupa vaga. Aceitar cria a participação na mesma transação. Há no máximo uma linha por pessoa e encontro.
 
-`Place` com `geography(Point, 4326)` e visibilidade pública continua conceito. O `community_id` do encontro já existe e é outra relação.
+`Venue` está em `venues`. O escopo pessoal tem `community_id` nulo e pertence a quem criou. O comunitário pertence ao grupo: integrante ativo lê, proprietário e administrador administram. Estado `active` ou `archived`. Arquivar não apaga encontro. O endereço não muda depois do cadastro. Latitude e longitude podem ficar nulas e, quando entram, entram juntas e uma vez só. O encontro guarda a própria cópia em `location_latitude` e `location_longitude`. PostGIS e local público global continuam fora. A decisão está nas [ADR-032](./DECISIONS.md) e [ADR-033](./DECISIONS.md). O detalhe está em [VENUES.md](./VENUES.md) e [MAPS.md](./MAPS.md).
+
+`community_id` do encontro continua outra relação: nulo é encontro privado, preenchido é encontro do grupo.
 
 ## Convites
 
@@ -142,6 +144,8 @@ Reentrada, na mesma linha:
 A descoberta pública devolve nome, descrição, modalidades e a quantidade de integrantes ativos. Anônimo lê esse catálogo e o resumo de uma comunidade pública. Anônimo não entra. A lista de integrantes só aparece para quem está `active`, e traz username e papel. E-mail, nome de exibição e preferências ficam de fora. Comunidade privada não entra na descoberta. Quem não participa recebe o mesmo "não encontrada" de um slug inexistente.
 
 `community_sports` aponta para `sports`. Não há segundo catálogo. A comunidade tem ao menos uma modalidade. A chave impede duplicata. Modalidade inativa não entra numa associação nova. Uma já ligada continua visível pelo nome se o catálogo for desativado, e a linha não é apagada por isso. `sports` usa `on delete restrict`.
+
+A cartinha da comunidade é outra relação. `community_card_templates` versiona de 3 a 8 atributos. `community_card_participations` registra quem aceitou ser avaliado. `community_player_ratings` guarda a nota vigente, de 1 a 99, sem leitura direta pelo cliente. O overall é a média das médias dos atributos que já têm três avaliadores ativos. Não é estatística de partida e não é ranking. O detalhe está em [PLAYER_CARDS.md](./PLAYER_CARDS.md).
 
 Proprietário e administrador editam nome, descrição e modalidades. Só o proprietário muda a visibilidade.
 
@@ -245,7 +249,9 @@ O tiebreak de games não vira game. A consulta soma essas linhas por modalidade 
 
 Companheiro e adversário não têm tabela própria. A consulta cruza a contribuição com o lado gravado em `match_teams` e `match_players`. O mesmo par pode acumular as duas relações em partidas diferentes. O detalhe, a amostragem mínima de cinco partidas e os desempates estão em [STATISTICS.md](./STATISTICS.md).
 
-Desempenho por local não tem linha nesta fase. Uma correção administrativa futura de uma partida confirmada deve chamar de novo `private.project_match_statistics`: se o estado deixar de ser `confirmed`, as contribuições daquela partida somem. O reprocessamento completo também apaga contribuição cuja partida já não está `confirmed`.
+O desempenho por local não tem tabela. A consulta agrupa a contribuição pelo `venue_id` do encontro. Nulo não vira um local. Arquivar ou renomear o cadastro não reescreve a contribuição nem o snapshot. Quem não pode mais ler o cadastro continua vendo o próprio número, sem nome, endereço ou coordenada. A utilização da comunidade conta partidas distintas, não jogadores. A decisão está na [ADR-034](./DECISIONS.md). O cálculo está em [STATISTICS.md](./STATISTICS.md).
+
+Uma correção administrativa futura de uma partida confirmada deve chamar de novo `private.project_match_statistics`: se o estado deixar de ser `confirmed`, as contribuições daquela partida somem. O reprocessamento completo também apaga contribuição cuja partida já não está `confirmed`.
 
 ## Enquetes da comunidade
 

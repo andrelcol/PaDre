@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   cancelMeetup,
+  setMeetupPlace,
   cancelMeetupInvitation,
   createCommunityMeetup,
   createMeetup,
@@ -79,6 +80,17 @@ export function useUpdateMeetup(meetupId: string) {
     mutationFn: (draft: MeetupWrite) => updateMeetup(meetupId, draft),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['meetups'] })
+    },
+  })
+}
+
+export function useSetMeetupPlace(meetupId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (draft: MeetupDraft) => setMeetupPlace(meetupId, draft),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['meetups'] })
+      await queryClient.invalidateQueries({ queryKey: ['venues', 'meetups'] })
     },
   })
 }

@@ -1,7 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { clearChunkReload } from './app/lazy-page.ts'
 import { App } from './app/App.tsx'
 import './index.css'
+
+clearChunkReload()
 
 const root = document.getElementById('root')
 

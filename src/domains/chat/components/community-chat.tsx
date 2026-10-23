@@ -210,7 +210,7 @@ export function CommunityChat({ slug, meetups }: CommunityChatProps) {
         </div>
       ) : null}
       <form
-        className="sticky bottom-0 z-10 flex flex-col gap-3 bg-background py-3"
+        className="sticky bottom-[var(--padre-overlay-bottom)] z-10 flex flex-col gap-3 border-t border-border bg-background py-3 md:bottom-0"
         onSubmit={(event) => void submit(event)}
       >
         <div className="flex flex-col gap-2">

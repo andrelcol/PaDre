@@ -8,14 +8,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SessionStateProvider } from '@/domains/identity/components/session.tsx'
 import { EditProfilePage } from '@/pages/EditProfilePage.tsx'
 
-const { getOwnProfile, updateOwnProfile } = vi.hoisted(() => ({
-  getOwnProfile: vi.fn(),
-  updateOwnProfile: vi.fn(),
-}))
+const { getOwnProfile, updateOwnProfile, getOwnPersonalDetails } = vi.hoisted(
+  () => ({
+    getOwnProfile: vi.fn(),
+    updateOwnProfile: vi.fn(),
+    getOwnPersonalDetails: vi.fn(),
+  }),
+)
 
 vi.mock('@/domains/identity/api/profile.ts', () => ({
   getOwnProfile,
   updateOwnProfile,
+  getOwnPersonalDetails,
 }))
 
 const userId = '11111111-1111-4111-8111-111111111111'
@@ -46,6 +50,15 @@ describe('EditProfilePage', () => {
   beforeEach(() => {
     getOwnProfile.mockReset()
     updateOwnProfile.mockReset()
+    getOwnPersonalDetails.mockReset()
+    getOwnPersonalDetails.mockResolvedValue({
+      height_cm: null,
+      sex: null,
+      show_height: false,
+      show_sex: false,
+      show_avatar: false,
+      avatar_path: null,
+    })
     getOwnProfile.mockResolvedValue({
       id: userId,
       username: 'ana',

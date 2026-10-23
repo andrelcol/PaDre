@@ -27,7 +27,7 @@ const formatSchema = bucketSchema.extend({
   format_name: z.string(),
 })
 
-const sportSchema = bucketSchema.extend({
+export const sportSchema = bucketSchema.extend({
   sport_id: z.uuid(),
   sport_name: z.string(),
   rule_type: z.enum(scoringRuleTypes),

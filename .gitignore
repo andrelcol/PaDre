@@ -26,6 +26,16 @@ playwright-report
 test-results
 blob-report
 
+# Android
+android/.gradle
+android/build
+android/app/build
+android/local.properties
+android/captures
+*.keystore
+*.jks
+artifacts/android/*.apk
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
