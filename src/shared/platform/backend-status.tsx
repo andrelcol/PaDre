@@ -14,7 +14,12 @@ export function BackendStatus() {
     if (!env) return
     const controller = new AbortController()
     const timer = window.setTimeout(() => controller.abort(), 4000)
-    void fetch(`${env.url}/auth/v1/health`, { signal: controller.signal })
+    void fetch(`${env.url}/auth/v1/health`, {
+      signal: controller.signal,
+      headers: {
+        apikey: env.anonKey,
+      },
+    })
       .then((response) => {
         setState(response.ok ? 'ready' : 'unreachable')
       })
