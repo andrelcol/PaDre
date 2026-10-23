@@ -1,14 +1,14 @@
 # Checkpoint do PaDre
 
-Registro de 23 de outubro de 2026. Este arquivo descreve o estado encontrado. Não publica o produto e não substitui o roteiro em [ROADMAP.md](./ROADMAP.md).
+Registro de 23 de outubro de 2026, com o envio ao GitHub atualizado depois. Não publica o produto e não substitui o roteiro em [ROADMAP.md](./ROADMAP.md). O plano da beta está em [BETA_DEPLOYMENT.md](./BETA_DEPLOYMENT.md).
 
 ## Onde cada coisa está
 
 | Situação                       | Estado                                                                                                                                                |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Implementado localmente        | Sim, no disco desta máquina, incluindo o que ainda não foi commitado                                                                                  |
-| Versionado no Git local        | Só até `b9e670c`. Locais, mapas, tema, Android, perfil esportivo e cartinhas estão fora dos commits                                                   |
-| Enviado ao GitHub              | Não. `origin/main` continua em `cf84435`                                                                                                              |
+| Versionado no Git local        | Sim. `HEAD` é `c929448`, incluindo locais, mapas, tema, Android, perfil e cartinhas                                                                   |
+| Enviado ao GitHub              | Sim. `origin/main` está em `c929448`. O site público e o Supabase hospedado continuam inexistentes                                                    |
 | Aplicado no banco local        | Sim. As 18 migrations, inclusive perfil e cartinhas, estão em `supabase_migrations.schema_migrations`                                                 |
 | Aplicado em banco hospedado    | Não. Não há projeto Supabase remoto ligado                                                                                                            |
 | Testado na web                 | Sim, nesta data: format, lint, tipos, 117 testes unitários, 139 testes de banco e 25 testes de navegador. Um teste de vídeo foi ignorado de propósito |
@@ -18,9 +18,7 @@ Registro de 23 de outubro de 2026. Este arquivo descreve o estado encontrado. N�
 
 ## Git
 
-`HEAD` é `b9e670c` (`feat: add community polls with private votes and aggregated results`). `main` local está 10 commits à frente de `origin/main` (`cf84435`, só o README). `git diff --check` não acusou erro de espaço.
-
-69 arquivos rastreados estão modificados (`+3291 / -296`). O restante do trabalho é não rastreado. `git diff` não mostra esses arquivos.
+`HEAD` e `origin/main` estão em `c929448` (`feat: consolidate sports club features and android foundation`). O envio foi fast-forward a partir de `cf84435`. Não há site público. `artifacts/` continua fora do Git.
 
 ## Banco
 

@@ -26,7 +26,7 @@ export function getSupabase() {
 export function requireSupabase() {
   const supabase = getSupabase()
   if (!supabase) {
-    throw new Error('O Supabase local não está configurado.')
+    throw new Error('O servidor não está configurado.')
   }
   return supabase
 }

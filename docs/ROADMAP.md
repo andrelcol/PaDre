@@ -2,7 +2,7 @@
 
 Cada fase é pequena o bastante para ser verificada e, se estiver consistente, commitada sozinha. Não se antecipa a fase seguinte.
 
-O modelo conceitual está em [DOMAIN_MODEL.md](./DOMAIN_MODEL.md). A migration de contas e perfil já existe. As seguintes continuam nascendo na fase que for usá-las.
+O modelo conceitual está em [DOMAIN_MODEL.md](./DOMAIN_MODEL.md). As fases 0 a 11, o perfil esportivo e as cartinhas estão no GitHub, em `main` (`c929448`). Isso não é uma beta publicada: não há Supabase hospedado, site HTTPS, Storage de foto nem validação em aparelho. O plano da primeira beta web está em [BETA_DEPLOYMENT.md](./BETA_DEPLOYMENT.md).
 
 ## Fase 0 — Fundação
 
@@ -105,6 +105,12 @@ Entregue também: cartinha por comunidade, com 3 a 8 atributos versionados, part
 Fora: ranking global, cartinha por modalidade, pacote, raridade e nota automática a partir da partida.
 
 Pronto quando: quem não participa não lê a cartinha e uma versão nova não reinterpreta voto antigo.
+
+## Beta web
+
+Não publicada. O código já está no GitHub. Falta um Supabase hospedado, independente do banco local, e uma hospedagem HTTPS. O cadastro público permanece fechado até decisão explícita. Os cerca de 894 perfis e 154 comunidades locais não serão copiados.
+
+Pronto quando: o site HTTPS fala só com o projeto beta, as 18 migrations estão nesse banco, o cadastro irrestrito está desligado no Auth e o ambiente local continua intacto.
 
 ## Fase 12 — Rankings
 

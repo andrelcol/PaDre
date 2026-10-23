@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+import {
+  assessHostedClientEnv,
+  isHostedAppEnv,
+} from '@/shared/platform/hosted-env.ts'
 import { isNativeAndroid } from '@/shared/platform/runtime.ts'
 import {
   publicWebOrigin,
@@ -26,6 +30,18 @@ export function readSupabaseEnv(): SupabaseEnv | null {
   })
 
   if (!parsed.success) return null
+
+  if (isHostedAppEnv(import.meta.env.VITE_APP_ENV)) {
+    const problems = assessHostedClientEnv({
+      appEnv: import.meta.env.VITE_APP_ENV,
+      supabaseUrl: parsed.data.VITE_SUPABASE_URL,
+      anonKey: parsed.data.VITE_SUPABASE_ANON_KEY,
+      publicWebOrigin: import.meta.env.VITE_PUBLIC_WEB_ORIGIN,
+      androidUrl: parsed.data.VITE_SUPABASE_URL_ANDROID,
+      appLinkHost: import.meta.env.VITE_APP_LINK_HOST,
+    })
+    if (problems.length > 0) return null
+  }
 
   return {
     url: resolveSupabaseUrl(parsed.data.VITE_SUPABASE_URL, {

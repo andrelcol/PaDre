@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:beta": "tsc -b && vite build --mode beta",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",
@@ -26,7 +27,8 @@
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:run": "npm run build && cap sync android && cap run android",
-    "android:build:debug": "npm run build && cap sync android && node scripts/android-debug.mjs"
+    "android:build:debug": "npm run build && cap sync android && node scripts/android-debug.mjs",
+    "android:build:beta": "npm run build:beta && CAPACITOR_CLEARTEXT=0 cap sync android && CAPACITOR_CLEARTEXT=0 node scripts/android-debug.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

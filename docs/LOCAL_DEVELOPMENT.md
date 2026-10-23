@@ -1,6 +1,6 @@
 # Desenvolvimento local
 
-Conta, sessão e perfil rodam contra um Supabase local. Não há projeto remoto ligado.
+Conta, sessão e perfil rodam contra um Supabase local. Não há projeto remoto ligado. A beta web usa outro Supabase e outro site; o plano está em [BETA_DEPLOYMENT.md](./BETA_DEPLOYMENT.md). Este arquivo e o `supabase/config.toml` descrevem só o ambiente local. Não envie este `config.toml` para um projeto hospedado: o `site_url` é localhost e o cadastro está aberto.
 
 ## O que sobe
 
